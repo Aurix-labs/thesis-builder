@@ -67,4 +67,23 @@ echo "$pass PASS / $fail FAIL"
 if [ $fail -gt 0 ]; then
   exit 1
 fi
+
+# === v3.1 内容层校验 ===
+HTML_PATH="$1"
+DIR="$(dirname "$HTML_PATH")"
+DATA="$DIR/data.json"
+REPORT="$DIR/report.md"
+
+if [ -f "$DATA" ] && [ -f "$REPORT" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  python "$SCRIPT_DIR/verify_content.py" \
+    --html "$HTML_PATH" --report "$REPORT" --data "$DATA"
+  CONTENT_RC=$?
+  if [ $CONTENT_RC -ne 0 ]; then
+    echo "[FAIL] verify_content.py 失败 (rc=$CONTENT_RC)"
+    exit 1
+  fi
+else
+  echo "[WARN] 未找到 data.json 或 report.md，跳过 verify_content"
+fi
 exit 0
