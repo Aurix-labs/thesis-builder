@@ -114,12 +114,25 @@
       grep -c '});' _h_part5.html                # ≥1（IIFE 闭合）
       grep -c '</script>' _h_part5.html          # =1
 
-### 合并 + 终验
+### 合并 + 终验（v3.1 扩展）
 
-    cat _h_part0.html _h_part1.html _h_part2.html _h_part3.html _h_part4.html _h_part5.html > report.html
-    bash skills/stock-analysis/scripts/verify_html.sh report.html
+合并 6 批：
 
-终验脚本输出全 PASS → 删 `_h_part*.html`。
+```bash
+cat _h_part0.html _h_part1.html _h_part2.html _h_part3.html _h_part4.html _h_part5.html > report.html
+```
+
+验证（v3.1 新增 verify_content）：
+
+```bash
+bash scripts/verify_html.sh report.html
+# 内部依次执行：
+#   1. 原 20 项形式检查（保留）
+#   2. verify_content.py：HTML/MD/JSON 三方一致性
+```
+
+任一 FAIL → Edit 修正对应 _h_part*.html 后重新 cat。
+全 PASS → 删除 _h_part*.html 中间产物。
 
 ---
 

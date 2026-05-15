@@ -97,3 +97,42 @@ Phase 2/3 的 AI 读取此 JSON 提取所需数据。
 
 原 `stock_full_report.py` 的 `blocks` 字段保留作为低级 raw 数据透传，供 agent 按需深挖。
 新代码应优先使用上面的标准字段。
+
+## anomalies.json schema (v3.1)
+
+```json
+{
+  "$schema": "anomalies-v1",
+  "as_of": "YYYY-MM-DD",
+  "code": "300775",
+  "items": [
+    {
+      "id": "A001",
+      "rule_id": "FIN-001",
+      "severity": "CRITICAL | HIGH | MEDIUM",
+      "indicator": "归母净利润",
+      "period": "2026Q1",
+      "value": 10737549.01,
+      "value_display": "0.107亿",
+      "prior_value": 128606786.31,
+      "prior_period": "2025Q1",
+      "delta_pct": -0.917,
+      "blocks_ref": "financial_abstract.20260331.归母净利润",
+      "must_address_in_step": ["0.5", "4", "5", "8"],
+      "narrative_hint": "..."
+    }
+  ]
+}
+```
+
+详细规则见 [anomaly-rules.md](anomaly-rules.md)。
+
+## data_inventory.md（v3.1，自动产出）
+
+非结构化 Markdown 报告，由 build_inventory.py 生成，包含：
+- Block 覆盖矩阵
+- 顶层字段健康度
+- Step 字段需求映射
+- 推荐补全清单
+
+agent 必读后方可进入 Phase 2。

@@ -448,3 +448,8 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
   margin: 16px 0;
 }
 .data-stale-warn::before { content: '⚠ '; color: var(--accent); }
+
+/* ------------------ Bear Case section (v3.1) ------------------ */
+#bear-case .section-eyebrow { color: var(--semantic-down); }
+#bear-case .section-eyebrow::before { content: '// '; opacity: 0.6; }
+#bear-case { border-left: 2px solid var(--semantic-down); padding-left: 28px; }
