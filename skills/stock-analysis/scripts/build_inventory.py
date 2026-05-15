@@ -91,7 +91,8 @@ def render_inventory(data: dict) -> str:
     # Step 映射
     lines += ["", "## Step 字段需求映射", "", "| Step | 必需字段 | 状态 |", "|---|---|---|"]
     for step, fields in STEP_FIELDS.items():
-        missing = [f for f in fields if not blocks.get(f)]
+        # 字段可能在 blocks 内，也可能是 data.json 顶层字段
+        missing = [f for f in fields if not (blocks.get(f) or data.get(f))]
         if missing:
             status = f"❌ 缺 {', '.join(missing)}"
         else:
@@ -102,7 +103,7 @@ def render_inventory(data: dict) -> str:
     missing_set = set()
     for step, fields in STEP_FIELDS.items():
         for f in fields:
-            if not blocks.get(f):
+            if not (blocks.get(f) or data.get(f)):
                 missing_set.add(f)
     if missing_set:
         lines += ["", "## 推荐补全", ""]
