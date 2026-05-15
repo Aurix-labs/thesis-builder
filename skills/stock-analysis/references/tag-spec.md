@@ -2,7 +2,7 @@
 
 报告 MD 中**每个具体数字**必须带标签，否则 verify_facts.py fail。
 
-## 四类标签
+## 五类标签
 
 | 标签 | 含义 | 反查方式 |
 |---|---|---|
@@ -62,7 +62,7 @@
 
 ```markdown
 营收 15.89 亿 [F:financials.2025.revenue]
-市值 162.5 亿 [C:quote.price * quote.total_shares]
+毛利 6.32 亿 [C:financials[2025].revenue * financials[2025].gross_margin]
 市占率 60% [I:行业常识·30吨以上钛合金锻件唯一民营龙头]
 中期 ¥36-42 [T:基准EPS 0.95 × PE 30-33x]
 
