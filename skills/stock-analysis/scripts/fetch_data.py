@@ -16,6 +16,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -285,6 +286,24 @@ def main(argv: list[str] | None = None) -> int:
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, default=str)
     print(f"✅ 已保存：{json_path}")
+
+    # === v3.1 chain: 自动生成 inventory + anomalies ===
+    scripts_dir = Path(__file__).parent
+    try:
+        subprocess.run([
+            "python", str(scripts_dir / "build_inventory.py"),
+            "--data", str(json_path),
+            "--out", str(out_dir / "data_inventory.md"),
+        ], check=True)
+        subprocess.run([
+            "python", str(scripts_dir / "scan_anomalies.py"),
+            "--data", str(json_path),
+            "--out-json", str(out_dir / "anomalies.json"),
+            "--out-md", str(out_dir / "anomalies.md"),
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"[WARN] inventory/anomalies chain 失败: {e}（不阻塞，但 Phase 2 之前请手工补）")
+
     return 0
 
 
