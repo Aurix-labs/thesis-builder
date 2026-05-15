@@ -451,6 +451,18 @@ footer {
 footer p { color: var(--ink-tertiary); margin-bottom: 6px; max-width: none; }
 footer strong { color: var(--ink-tertiary); font-weight: 400; }
 
+/* ------------------ v3.1 inline tag spans ------------------ */
+.tag-f, .tag-c, .tag-i, .tag-t, .tag-gap {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-tertiary);
+  margin-left: 4px;
+  opacity: 0.7;
+}
+.tag-f { color: var(--accent); }
+.tag-c { color: var(--accent-hover); }
+.tag-gap { color: var(--semantic-warn); }
+
 /* ------------------ Warnings ------------------ */
 .data-stale-warn {
   background: rgba(94, 106, 210, 0.08);
@@ -487,6 +499,7 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
     <a href="#risk">风险</a>
     <a href="#valuation">估值</a>
     <a href="#compare">对标</a>
+    <a href="#bear-case">空头</a>
   </div>
   <div class="right">SESSION 0x3F4A · 2026-05-15 14:32 UTC+8</div>
 </nav>
@@ -515,7 +528,7 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
 
   <!-- Meta Row -->
   <div class="meta-row">
-    <div class="hero-meta-item"><div class="k">Quality</div><div class="v">B</div><div class="sub">72 / 100 · 6 dims</div></div>
+    <div class="hero-meta-item"><div class="k">Rubric</div><div class="v">72/100</div><div class="sub">14/20 ✓</div></div>
     <div class="hero-meta-item"><div class="k">Target / mid</div><div class="v target-mid">¥290.00</div><div class="sub">+15.9% upside</div></div>
     <div class="hero-meta-item"><div class="k">R / R</div><div class="v">2.8</div><div class="sub">¥230 ↔ ¥290 ↔ ¥350</div></div>
     <div class="hero-meta-item"><div class="k">Risk</div><div class="v">MED</div><div class="sub">3 hard-stops</div></div>
@@ -539,7 +552,7 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
     <div class="card">
       <div class="section-eyebrow">recent news</div>
       <h3>近期动态</h3>
-      <p style="font-size:13px;">· 2026-05-08 比亚迪 4 月销量同比 +21%（新浪财经）</p>
+      <p style="font-size:13px;">· 2026-05-08 比亚迪 4 月销量同比 +21% <span class="tag-i">[I:乘联会·4月汽车销量月报]</span>（新浪财经）</p>
       <p style="font-size:13px;">· 2026-05-03 海洋系列旗舰上市，售价 33.98 万起</p>
       <p style="font-size:13px;">· 2026-04-22 一季报：营收 +18% / 净利 +33%</p>
     </div>
@@ -557,8 +570,8 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
       <h3>关键财务指标</h3>
       <div class="data-grid">
         <div class="grid-head"><div>指标</div><div>FY25</div><div>FY24</div><div>FY23</div></div>
-        <div class="grid-row"><div>营收（亿）</div><div>7771</div><div>6023</div><div>4241</div></div>
-        <div class="grid-row"><div>净利润（亿）</div><div>402.5</div><div>300.4</div><div>166.2</div></div>
+        <div class="grid-row"><div>营收（亿）</div><div>7771 <span class="tag-f">[F:financials.2025.revenue]</span></div><div>6023</div><div>4241</div></div>
+        <div class="grid-row"><div>净利润（亿）</div><div>402.5 <span class="tag-f">[F:financials.2025.net_profit]</span></div><div>300.4</div><div>166.2</div></div>
         <div class="grid-row"><div>毛利率</div><div>18.2%</div><div>18.0%</div><div>16.8%</div></div>
         <div class="grid-row"><div>ROE</div><div class="pos">24.1%</div><div>21.8%</div><div>15.4%</div></div>
       </div>
@@ -592,7 +605,7 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
   <section class="card" id="macro">
     <div class="section-eyebrow">step_01 · macro</div>
     <h2>宏观与周期定位</h2>
-    <p>新能源车渗透率全球 28%（中国 52% / 欧洲 19% / 美国 9%）。中国进入「补贴退坡 + 价格内卷」末段，欧洲反补贴扰动短期但 2026 年欧 7 排放门槛实质利好头部 OEM。美国 IRA 限制下，比亚迪通过墨西哥/巴西本地化迂回切入。</p>
+    <p>新能源车渗透率全球 28% <span class="tag-c">[C:BNEF·Global EV Outlook 2026]</span>（中国 52% / 欧洲 19% / 美国 9%）。中国进入「补贴退坡 + 价格内卷」末段，欧洲反补贴扰动短期但 2026 年欧 7 排放门槛实质利好头部 OEM。美国 IRA 限制下，比亚迪通过墨西哥/巴西本地化迂回切入。</p>
     <p>政策环境：国内置换补贴持续；欧盟 17% 反补贴关税已落地（比亚迪 17%）；东南亚多国零关税友好。</p>
     <p>核心矛盾提炼：<strong>全球化销量 vs. 单车利润压力</strong>。</p>
   </section>
@@ -622,7 +635,7 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
   <section class="card" id="quality">
     <div class="section-eyebrow">step_03 · company quality</div>
     <h2>公司质地评分</h2>
-    <p style="margin-bottom:16px;color:var(--ink-subtle);font-size:13px;">6 维度 100 分制 · 当前 <strong>72 / B 级</strong></p>
+    <p style="margin-bottom:16px;color:var(--ink-subtle);font-size:13px;">6 维度 100 分制 · 当前 <strong>72 / B 级</strong> <span class="tag-t">[T:quality_rubric.v3.1.6dims]</span></p>
     <div class="score-row"><div class="k">财务质量</div><div class="score-track">
       <div class="score-seg lit"></div>
       <div class="score-seg lit"></div>
@@ -784,6 +797,17 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
       <div class="score-seg lit"></div>
       <div class="score-seg dim"></div>
     </div><div class="pts">75</div></div>
+  </section>
+
+  <!-- ANCHOR:bear-case -->
+  <section class="card" id="bear-case">
+    <div class="section-eyebrow">// BEAR CASE · 对立面观点</div>
+    <h2>如果多头错了，错在哪里</h2>
+    <p>本节由 Phase 2.6 bear-case sub-agent 自动生成。基于 anomalies.md，提出 3 条可能让多头观点失败的路径：</p>
+    <p>1. <strong>欧盟反补贴升至 30%</strong>：若 25% → 30%，墨西哥/巴西本地化产能 2026 H1 难承接，海外销量增长断档；对应 anomaly A002。</p>
+    <p>2. <strong>锂价反弹突破 25 万/吨</strong>：自有矿对冲不足以覆盖外购缺口，单车毛利率掉 4-5pct；对应 anomaly A005。</p>
+    <p>3. <strong>海洋系列高端化失速</strong>：若 25 万以上车型月销跌破 1 万，品牌溢价路径中断，整体估值锚降回 Toyota 模型（PE 8-10x）。</p>
+    <p>验证信号：① 单季海外销量同比 &lt; +5%；② 单车净利 &lt; 6000 元；③ 海洋系列旗舰月销连续两月 &lt; 1.2 万。任一触发即重审多头逻辑。</p>
   </section>
 
   <!-- ANCHOR:conclusion-box -->
