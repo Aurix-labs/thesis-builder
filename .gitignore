@@ -3,3 +3,11 @@ docs/superpowers/
 mockups/
 CLAUDE.md
 /.idea/
+output/
+latest/
+
+# Python 运行时产物
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
