@@ -16,13 +16,14 @@ metadata:
 
 ## Agent 阅读顺序
 
-触发本 skill 后按需逐步加载，**不要并行预读所有 references**（浪费 context）：
-
-1. **本文 SKILL.md** — 整体流程总览（你正在读）
-2. **Phase 2 时** → [references/analysis-framework.md](references/analysis-framework.md) — Step 0-8 方法论 + 信源分级 + 五维评分
-3. **Phase 3 时** → [references/html-spec.md](references/html-spec.md) + [references/batch-checklist.md](references/batch-checklist.md) — 设计语言 + 分批 grep 校验
-4. **写 / 读 data.json 时** → [references/data-schema.md](references/data-schema.md) — 输出字段约定
-5. **HTML 写完时** → 跑 [scripts/verify_html.sh](scripts/verify_html.sh) 自动校验
+1. **本文 SKILL.md** — 阶段总览（你正在读）
+2. **Phase 1.5 时** → `output/.../data_inventory.md` + `output/.../anomalies.md`（自动产出）
+3. **Phase 2 写每段前** → [references/tag-spec.md](references/tag-spec.md) + [references/analysis-framework.md](references/analysis-framework.md) 对应 Step
+4. **Phase 2 评分** → [references/rubric-spec.md](references/rubric-spec.md)
+5. **Phase 2 异常** → [references/anomaly-rules.md](references/anomaly-rules.md)
+6. **Phase 3 时** → [references/html-spec.md](references/html-spec.md) + [references/batch-checklist.md](references/batch-checklist.md)
+7. **写/读 data.json 时** → [references/data-schema.md](references/data-schema.md)
+8. **Phase 3 末** → 跑 [scripts/verify_html.sh](scripts/verify_html.sh)（含 verify_content.py）
 
 ---
 
@@ -38,9 +39,76 @@ metadata:
 
 ---
 
-## 三阶段流程
+## 阶段时序（v3.1）
 
-### Phase 1 · 数据采集（3-5 min）
+```text
+Phase 1   数据采集
+  └─ fetch_data.py 末尾自动 chain：
+       build_inventory.py → data_inventory.md
+       scan_anomalies.py  → anomalies.{json,md}
+
+Phase 1.5 数据 checkpoint
+  └─ agent 必读 data_inventory.md + anomalies.md
+  └─ ❌ 字段必须 web_fetch 补 或 显式 [GAP]
+  └─ CRITICAL anomaly 必须在 Step 0.5 整段讨论
+
+Phase 2  深度分析（三段检点制 + 标签）
+  §1 (Step 0, 0.5, 1, 2) → part1 → verify_facts.py --partial part1
+  §2 (Step 3, 4, 5)       → part2 → verify_facts.py --partial part2
+  §3 (Step 6, 7, 8)       → part3 → verify_facts.py --partial part3
+  合并 cat part*.md > report.md
+
+Phase 2.5 Fact-checker
+  └─ verify_facts.py FULL → 必须 0 FAIL
+  └─ Task(general-purpose subagent) → fact-check-report.md
+  └─ FAIL 项必须 Edit 修正后重跑（最多 3 轮）
+
+Phase 2.6 Bear-case
+  └─ Task(general-purpose subagent) → bear-case.md
+  └─ append 到 report.md 作为新 section
+
+Phase 3   HTML 6 批分批手写
+  └─ verify_html.sh（含 verify_content.py）→ 0 FAIL
+  └─ 删除中间产物 _h_part*.html
+```
+
+### Phase 2.5 fact-checker sub-agent prompt（agent 复制粘贴用）
+
+```text
+你是审稿人。检查 report.md 数字准确性 + 推断合理性。
+
+【输入】report.md / data.json / anomalies.md（路径见此次 output 目录）
+
+【任务】
+1. 抽样 20 个 [F:] 标签，逐一核对值的精确性 + 单位 + 上下文
+2. 检查所有 [I:] 推断依据是否合理（"行业常识·龙头地位"这种宽泛理由不通过）
+3. 检查所有 [T:] 目标价的乘法表是否自洽
+4. 找出 anomalies.md 中存在但报告中未充分讨论的异常
+5. 找出报告内部矛盾
+
+【输出】fact-check-report.md
+- PASS: N / FAIL: M / WARN: K
+- 每条 FAIL 必含：location + 问题描述 + 修复指令
+```
+
+### Phase 2.6 bear-case sub-agent prompt
+
+```text
+你是空头分析师。基于 report.md 与 anomalies.md，写 300-500 字对立面观点。
+
+【任务】
+1. 找出 3 条主 agent 没充分讨论的负面证据
+2. 给出"如果多头观点错了，错在哪里"的具体路径
+3. 反驳报告中关键的 [I:] 推断
+4. 提出 3 条"如果出现 X 信号，则空头观点确认"的可观测指标
+
+【输出】bear-case.md（不需要标签）
+- 必须引用 anomalies.md 中至少 2 条 ID
+```
+
+---
+
+## Phase 1 · 数据采集（3-5 min）
 
 **所需数据：** 近 3 年日 K 线、近 3 年财务（营收/净利/毛利/ROE）、主营业务构成、十大股东、近期新闻。
 
@@ -57,7 +125,7 @@ metadata:
 
 ---
 
-### Phase 2 · AI 深度分析（30-45 min · 三段检点制）
+## Phase 2 · AI 深度分析（30-45 min · 三段检点制）
 
 | 段 | 包含 Step | 落盘 |
 |----|-----------|------|
@@ -73,15 +141,11 @@ metadata:
 
 **最低行数（不可少）：** Step 0:10 / 1:50 / 2:100 / 3:50 / 4:80 / 5:40 / 6:100 / 7:60 / 8:50（合计 540 行）。
 
-**两套评分体系（必须区分）：**
-- Step 3 公司质地评分（6 维 / 100 分）— hero meta-row 的 Quality 字段
-- Step 8 综合交易评分（5 维 / 100 分）— Step 8 卡片内部
-
 **方法论详见：** [references/analysis-framework.md](references/analysis-framework.md)
 
 ---
 
-### Phase 3 · HTML 生成（30-40 min · 6 批分批手写）
+## Phase 3 · HTML 生成（30-40 min · 6 批分批手写）
 
 **工具分工：**
 - Write 写 markup / Edit 局部改 / Bash cat 字节拼接
@@ -139,4 +203,8 @@ output/
 | 7 | footer 使用 `<strong>` / 金色 | 违反纯 Mono footer 规范 |
 | 8 | Phase 1 输出旧路径 `output/data_<code>.json` | 应使用 `<股票名>_<代码>/<日期>/` |
 | 9 | 一次性写完整 HTML | 必须分 6 批，每批 ≤300 行 |
+| 11 | 报告中数字不带 [F]/[C]/[I]/[T]/[GAP] 标签 | verify_facts FAIL，无法进 Phase 3 |
+| 12 | 跳过 fact-checker 或 bear-case sub-agent | 多 agent 防御纵深失效 |
+| 13 | hero meta 显示 A/B/C 字母评级 | v3.1 改用 `Rubric: <total>/100` |
+| 14 | Step 8 再次出现 5 维综合评分 | 已取消，仅保留定性结论 |
 
