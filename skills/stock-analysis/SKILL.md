@@ -9,17 +9,20 @@ description: |
   生成结果为 output/<股票名>_<代码>/<YYYY-MM-DD>/ 下的 data.json + report.md + report.html。
   本工具仅供研究参考，不构成证券投资咨询业务，不构成投资建议。
 metadata:
-  author: ll-mingli1221
-  version: "3.0.0"
   argument-hint: <股票代码 或 股票名称>
 ---
 
-# stock-analysis · 个股深度研究系统 v3.0
+# stock-analysis · 个股深度研究系统
 
-## Compliance
+## Agent 阅读顺序
 
-本工具不构成证券投资咨询业务、不构成投资建议。所生成的目标价、操作建议、评级仅为研究演示，
-使用者据此操作的盈亏由使用者本人承担。
+触发本 skill 后按需逐步加载，**不要并行预读所有 references**（浪费 context）：
+
+1. **本文 SKILL.md** — 整体流程总览（你正在读）
+2. **Phase 2 时** → [references/analysis-framework.md](references/analysis-framework.md) — Step 0-8 方法论 + 信源分级 + 五维评分
+3. **Phase 3 时** → [references/html-spec.md](references/html-spec.md) + [references/batch-checklist.md](references/batch-checklist.md) — 设计语言 + 分批 grep 校验
+4. **写 / 读 data.json 时** → [references/data-schema.md](references/data-schema.md) — 输出字段约定
+5. **HTML 写完时** → 跑 [scripts/verify_html.sh](scripts/verify_html.sh) 自动校验
 
 ---
 
@@ -73,10 +76,6 @@ metadata:
 **两套评分体系（必须区分）：**
 - Step 3 公司质地评分（6 维 / 100 分）— hero meta-row 的 Quality 字段
 - Step 8 综合交易评分（5 维 / 100 分）— Step 8 卡片内部
-
-**MD 内容禁止：**
-- 任何位置出现 `@ll-mingli1221` / `明立` 等署名（仅 HTML footer 出现）
-- 末尾添加署名行
 
 **方法论详见：** [references/analysis-framework.md](references/analysis-framework.md)
 
@@ -138,28 +137,6 @@ output/
 | 5 | MathJax 使用双反斜杠 `\\(...\\)` | 分隔符匹配失败 |
 | 6 | accent 色混用金色 / 多色 score-fill 渐变 | 违反 Linear Terminal+ 设计 |
 | 7 | footer 使用 `<strong>` / 金色 | 违反纯 Mono footer 规范 |
-| 8 | MD 中出现作者署名 | 仅 HTML footer 统一渲染 |
-| 9 | Phase 1 输出旧路径 `output/data_<code>.json` | 应使用 `<股票名>_<代码>/<日期>/` |
-| 10 | 一次性写完整 HTML | 必须分 6 批，每批 ≤300 行 |
+| 8 | Phase 1 输出旧路径 `output/data_<code>.json` | 应使用 `<股票名>_<代码>/<日期>/` |
+| 9 | 一次性写完整 HTML | 必须分 6 批，每批 ≤300 行 |
 
----
-
-## 安装
-
-```bash
-npx skills add zhangchao/thesis-builder --skill stock-analysis
-# 或全局
-npx skills add zhangchao/thesis-builder --skill stock-analysis -g
-```
-
-## 相关文档
-
-- [references/analysis-framework.md](references/analysis-framework.md) — Step 0-8 方法论详解
-- [references/html-spec.md](references/html-spec.md) — HTML 设计规范
-- [references/batch-checklist.md](references/batch-checklist.md) — Phase 3 分批校验清单
-- [references/data-schema.md](references/data-schema.md) — Phase 1 输出 JSON schema
-- [templates/template_base.css](templates/template_base.css) — 完整样式
-- [templates/template_base.js](templates/template_base.js) — K线/饼图配置
-- [examples/比亚迪_002594.html](examples/比亚迪_002594.html) — 金标范例
-- [scripts/fetch_data.py](scripts/fetch_data.py) — akshare 参考脚本
-- [scripts/verify_html.sh](scripts/verify_html.sh) — HTML 自检脚本
