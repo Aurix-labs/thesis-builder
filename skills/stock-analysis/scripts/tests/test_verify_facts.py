@@ -198,3 +198,36 @@ def test_check_f_tag_unit_mismatch_fails():
     result = check_f_tag(tag, data)
     assert result is not None
     assert result['kind'] == 'FAIL'
+
+
+def test_formula_pow():
+    """UT-04a · pow(a, b) supported"""
+    from verify_facts import eval_formula
+    data = {"x": 8}
+    # 8^(1/3) = 2.0
+    result = eval_formula("pow(x, 1/3)", data)
+    assert abs(result - 2.0) < 1e-9
+
+
+def test_formula_sqrt():
+    """UT-04b · sqrt supported"""
+    from verify_facts import eval_formula
+    data = {"x": 16}
+    result = eval_formula("sqrt(x)", data)
+    assert abs(result - 4.0) < 1e-9
+
+
+def test_formula_abs():
+    """UT-04c · abs supported"""
+    from verify_facts import eval_formula
+    data = {"x": -7.5}
+    result = eval_formula("abs(x)", data)
+    assert abs(result - 7.5) < 1e-9
+
+
+def test_formula_disallows_builtins():
+    """UT-04d · __builtins__ should be inaccessible"""
+    from verify_facts import eval_formula
+    import pytest
+    with pytest.raises((ValueError, NameError)):
+        eval_formula("__import__('os').system('echo pwned')", {})

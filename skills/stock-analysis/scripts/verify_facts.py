@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -140,25 +141,38 @@ def check_f_tag(tag: Tag, data: Any) -> dict | None:
 FORMULA_TOKEN = re.compile(r'[\w\.\[\]\-]+')
 
 
+# v3.2: 公式白名单函数
+ALLOWED_FUNCS = {'pow': pow, 'sqrt': math.sqrt, 'abs': abs}
+
+
 def eval_formula(formula: str, data: Any) -> float:
-    """解析 [C:] 公式：path 引用替换为数值后 eval。仅允许 + - * / 与数字。"""
+    """解析 [C:] 公式：path 引用替换为数值后 eval。
+    v3.2 支持 pow/sqrt/abs，受限名空间；运算符 + - * / 与括号 ( ) 与逗号 ,。"""
     def replace(m):
         tok = m.group(0)
-        # 单字符运算符直接放行（修 v3.1 独立 `-` 陷阱）
+        # 单字符运算符直接放行（A2 引入）
         if tok in ('-', '+', '*', '/'):
             return tok
         # 数字字面量（含负号 / 科学记数法）
         if tok.replace('.', '').replace('-', '').replace('e', '').replace('E', '').isdigit():
             return tok
+        # 白名单函数名直接放行
+        if tok in ALLOWED_FUNCS:
+            return tok
+        # path 引用（支持 |单位 后缀，A3 引入）
+        path, unit = parse_payload(tok)
         try:
-            v = resolve_path(data, tok)
-            return str(float(v))
+            v = resolve_path(data, path)
+            return str(float(v) / UNIT_SCALES.get(unit, 1) if unit else float(v))
         except (KeyError, ValueError, TypeError):
             raise ValueError(f"formula token {tok} 无法解析")
+
     replaced = FORMULA_TOKEN.sub(replace, formula)
-    if re.search(r'[^0-9.\-\+\*/()\s eE]', replaced):
+    # 合法字符集放宽到 [0-9.\-\+\*/()\s eE,a-zA-Z_]（加逗号支持多参数函数、字母支持函数名）
+    if re.search(r'[^0-9.\-\+\*/()\s eE,a-zA-Z_]', replaced):
         raise ValueError(f"formula 含非法字符：{replaced}")
-    return eval(replaced)  # noqa: S307 — 已限制字符集
+    # 受限 eval：__builtins__ 屏蔽，只暴露 ALLOWED_FUNCS
+    return eval(replaced, {"__builtins__": None}, ALLOWED_FUNCS)  # noqa: S307
 
 
 def check_c_tag(tag: Tag, data: Any) -> dict | None:
