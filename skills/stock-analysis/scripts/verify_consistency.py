@@ -33,6 +33,86 @@ def extract_invariants(report_md: str) -> dict | None:
         return None
 
 
+def safe_eval_expr(expr: str, ctx: dict) -> float:
+    """安全 eval 算式字符串：只允许 + - * / ( ) 与 ctx 字典里的变量名。
+    返回 float。"""
+    # 替换变量名为数值
+    def replace_name(m):
+        name = m.group(0)
+        if name in ctx:
+            return str(float(ctx[name]))
+        # 数字字面量
+        try:
+            float(name)
+            return name
+        except ValueError:
+            raise ValueError(f"未知变量：{name}")
+
+    # 抓 [A-Za-z_][\w]*|数字
+    name_re = re.compile(r'[A-Za-z_]\w*|\d+\.?\d*')
+    replaced = name_re.sub(replace_name, expr)
+    if re.search(r'[^0-9.\-\+\*/()\s]', replaced):
+        raise ValueError(f"算式含非法字符：{replaced}")
+    return float(eval(replaced))  # noqa: S307
+
+
+def find_keyword_near_number(report_md: str, keywords: list[str]) -> list[tuple[int, float, str]]:
+    """扫描 report_md，找到任一 keyword 后同行 ±40 字符内的数字。
+    返回 [(line_no, number, matched_keyword), ...]"""
+    results = []
+    for line_no, line in enumerate(report_md.splitlines(), 1):
+        for kw in keywords:
+            for m in re.finditer(re.escape(kw), line):
+                # 向后扫 40 字符找数字
+                window = line[m.end(): m.end() + 40]
+                num_match = re.search(r'(-?\d+\.?\d*)', window)
+                if num_match:
+                    results.append((line_no, float(num_match.group(1)), kw))
+                    break
+    return results
+
+
+def check_derived(inv: dict, report_md: str, fails: list) -> None:
+    """CONS-derived: derived.X 算式重算 = 正文出现的同名 keyword 附近数字 ±1%"""
+    constants = inv.get('constants', {})
+    derived_exprs = inv.get('derived', {})
+    keywords = inv.get('keywords', {})
+
+    # 构造 eval 上下文：constants + 先算出的 derived
+    ctx = dict(constants)
+    for key, expr in derived_exprs.items():
+        if isinstance(expr, str):
+            try:
+                value = safe_eval_expr(expr, ctx)
+            except (ValueError, KeyError) as e:
+                fails.append({
+                    'check': 'CONS-derived',
+                    'location': f'invariants.derived.{key}',
+                    'expected': f'算式 {expr} 重算',
+                    'actual':   f'求值失败：{e}',
+                    'fix':      f'修正 invariants.derived.{key} 算式或 constants',
+                })
+                continue
+        else:
+            value = float(expr)  # 直接声明数值
+        ctx[key] = value
+
+        # 扫正文找 keyword 附近数字
+        kw_list = keywords.get(key, [])
+        if not kw_list:
+            continue  # 没有 keyword 别名表，跳过正文比对
+        occurrences = find_keyword_near_number(report_md, kw_list)
+        for line_no, num, kw in occurrences:
+            if abs(num - value) / max(abs(value), 1e-9) > 0.01:
+                fails.append({
+                    'check': 'CONS-derived',
+                    'location': f'line {line_no} (near keyword "{kw}")',
+                    'expected': f'{value:.4g} (from derived.{key} = {expr})',
+                    'actual':   f'{num:.4g}',
+                    'fix':      f'修正 line {line_no} 数字为 {value:.4g}，或更新 invariants.derived.{key}',
+                })
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -49,7 +129,8 @@ def main() -> int:
         return 0
 
     fails: list[dict] = []
-    # 后续 task B2-B7 逐步加 check_derived / check_target_mult / check_anomaly_titles / check_baseline_eps / check_score_consistency / expand_explicit_refs
+    check_derived(inv, report_md, fails)
+    # 后续 task B3-B7 逐步加 check_target_mult / check_anomaly_titles / check_baseline_eps / check_score_consistency / expand_explicit_refs
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:
