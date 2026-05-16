@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-TAG_RE = re.compile(r'\[(F|C|I|T|GAP):([^\]]+)\]')
+TAG_RE = re.compile(r'\[(F|C|I|T|GAP):((?:[^\[\]]|\[-?\d+\])+)\]')
 
 # 解决方案 2: 只匹配数字字面量，不做单位归一化
 NUM_RE = re.compile(r'(-?\d+\.?\d*)\s*(亿|万|%|倍|元|万手|手)?')

@@ -112,3 +112,19 @@ def test_critical_anomaly_must_appear_in_step_0_5(tmp_path):
                          capture_output=True, text=True)
     assert res.returncode == 1
     assert "Step 0.5" in res.stdout or "Step 0.5" in res.stderr
+
+
+def test_tag_re_supports_bracket_index():
+    """UT-01 · TAG_RE should not truncate at [-1]"""
+    tags = extract_tags("¥86.87 [F:blocks.fund_flow[-1].收盘价]")
+    assert len(tags) == 1
+    assert tags[0].kind == 'F'
+    assert tags[0].payload == 'blocks.fund_flow[-1].收盘价'
+
+
+def test_tag_re_supports_zero_and_positive_index():
+    """UT-01b · [0] and [42] should also work"""
+    tags = extract_tags("[F:rows[0].name] [F:items[42].val]")
+    assert len(tags) == 2
+    assert tags[0].payload == 'rows[0].name'
+    assert tags[1].payload == 'items[42].val'
