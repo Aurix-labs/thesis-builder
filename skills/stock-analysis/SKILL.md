@@ -39,7 +39,7 @@ metadata:
 
 ---
 
-## 阶段时序（v3.1）
+## 阶段时序（v3.2）
 
 ```text
 Phase 1   数据采集
@@ -52,15 +52,21 @@ Phase 1.5 数据 checkpoint
   └─ ❌ 字段必须 web_fetch 补 或 显式 [GAP]
   └─ CRITICAL anomaly 必须在 Step 0.5 整段讨论
 
-Phase 2  深度分析（三段检点制 + 标签）
+Phase 2  深度分析（三段检点制 + 标签 + invariants）
   §1 (Step 0, 0.5, 1, 2) → part1 → verify_facts.py --partial part1
+       └─ v3.2：part1 必须含 invariants YAML 块（compliance 之后）
   §2 (Step 3, 4, 5)       → part2 → verify_facts.py --partial part2
+       └─ v3.2：§2 增量回填 invariants（baseline/derived 字段）
   §3 (Step 6, 7, 8)       → part3 → verify_facts.py --partial part3
+       └─ v3.2：§3 增量回填 invariants（target_price 乘法表）
   合并 cat part*.md > report.md
+  ↓ v3.2 新增：合并后必须跑 verify_consistency
+  verify_consistency.py --report report.md --data data.json  # 0 FAIL
 
-Phase 2.5 Fact-checker
+Phase 2.5 Fact-checker（v3.2 仅负责软问题）
   └─ verify_facts.py FULL → 必须 0 FAIL
-  └─ Task(general-purpose subagent) → fact-check-report.md
+  └─ verify_consistency.py FULL → 必须 0 FAIL（数值/单位/算式硬错由脚本抓）
+  └─ Task(general-purpose subagent) → fact-check-report.md（仅查推断合理性 / 矛盾）
   └─ FAIL 项必须 Edit 修正后重跑（最多 3 轮）
 
 Phase 2.6 Bear-case
@@ -72,6 +78,8 @@ Phase 3   HTML 6 批分批手写
   └─ 删除中间产物 _h_part*.html
 ```
 
+> **v3.2 变化：** Phase 2 §1 写 part1 时 agent 必须在 compliance 声明之后插入 invariants YAML 块（schema 见 [references/invariants-spec.md](references/invariants-spec.md)），后续 §2 §3 增量回填。合并 report.md 后必跑 verify_consistency。
+
 ### Phase 2.5 fact-checker sub-agent prompt（agent 复制粘贴用）
 
 ```text
@@ -79,12 +87,18 @@ Phase 3   HTML 6 批分批手写
 
 【输入】report.md / data.json / anomalies.md（路径见此次 output 目录）
 
-【任务】
-1. 抽样 20 个 [F:] 标签，逐一核对值的精确性 + 单位 + 上下文
-2. 检查所有 [I:] 推断依据是否合理（"行业常识·龙头地位"这种宽泛理由不通过）
-3. 检查所有 [T:] 目标价的乘法表是否自洽
-4. 找出 anomalies.md 中存在但报告中未充分讨论的异常
-5. 找出报告内部矛盾
+【任务】（v3.2 起仅负责"软问题"，硬错由 verify_facts + verify_consistency 自动抓）
+1. 抽样 20 个 [F:] / [C:] 标签，看推断依据是否过于宽泛（"行业常识·龙头地位"这种宽泛理由不通过）
+2. 检查所有 [I:] 推断（约 50+ 处）的依据合理性
+3. 找出 anomalies.md 中存在但报告中未充分讨论的异常（特别 MEDIUM 级，未进 invariants）
+4. 找出 bear-case 是否引用了至少 2 条 ANO（v3.1 要求）
+5. 找出报告内部矛盾（特别是 Step 4 情景假设 vs Step 6 目标价假设的语义一致性，数值由 verify_consistency 已抓）
+
+【明确不再做】（已由脚本覆盖）
+- 跨节同变量数值是否一致（CONS-baseline-eps / CONS-derived 覆盖）
+- 目标价乘法表自洽（CONS-target-mult 覆盖）
+- ANO 标题与 invariants 一致（CONS-anomaly-title 覆盖）
+- 派生量与算式自洽（CONS-derived 覆盖）
 
 【输出】fact-check-report.md
 - PASS: N / FAIL: M / WARN: K
@@ -203,7 +217,7 @@ output/
 | 7 | footer 使用 `<strong>` / 金色 | 违反纯 Mono footer 规范 |
 | 8 | Phase 1 输出旧路径 `output/data_<code>.json` | 应使用 `<股票名>_<代码>/<日期>/` |
 | 9 | 一次性写完整 HTML | 必须分 6 批，每批 ≤300 行 |
-| 11 | 报告中数字不带 [F]/[C]/[I]/[T]/[GAP] 标签 | verify_facts FAIL，无法进 Phase 3 |
+| 11 | 报告中数字不带 [F]/[C]/[I]/[T]/[GAP] 标签 | verify_facts FAIL，无法进 Phase 3。**v3.2 起：金额类标签建议带 \|亿 后缀，否则单位错配仍会 FAIL** |
 | 12 | 跳过 fact-checker 或 bear-case sub-agent | 多 agent 防御纵深失效 |
 | 13 | hero meta 显示 A/B/C 字母评级 | v3.1 改用 `Rubric: <total>/100` |
 | 14 | Step 8 再次出现 5 维综合评分 | 已取消，仅保留定性结论 |
