@@ -138,6 +138,59 @@ def check_derived(inv: dict, report_md: str, fails: list) -> None:
                 })
 
 
+def check_target_mult(inv: dict, fails: list) -> None:
+    """CONS-target-mult: targets.{level}.{low,high} == pe_{low,high} * ctx[eps_var]"""
+    constants = inv.get('constants', {})
+    derived_exprs = inv.get('derived', {})
+    targets = inv.get('targets', {})
+
+    # 构造 eval 上下文（含 derived 重算值）
+    ctx = dict(constants)
+    for key, expr in derived_exprs.items():
+        if isinstance(expr, str):
+            try:
+                ctx[key] = safe_eval_expr(expr, ctx)
+            except Exception:
+                pass  # 跳过——CONS-derived 已经报这个错
+        else:
+            ctx[key] = float(expr)
+
+    for level in ('short', 'mid', 'long'):
+        t = targets.get(level)
+        if not t:
+            fails.append({
+                'check': 'CONS-target-mult',
+                'location': f'invariants.targets.{level}',
+                'expected': 'low/high/pe_low/pe_high/eps_var 5 字段齐全',
+                'actual':   '缺失',
+                'fix':      f'补齐 invariants.targets.{level}',
+            })
+            continue
+        eps_var = t.get('eps_var')
+        eps = ctx.get(eps_var)
+        if eps is None:
+            fails.append({
+                'check': 'CONS-target-mult',
+                'location': f'invariants.targets.{level}.eps_var',
+                'expected': f'{eps_var} 应在 constants 或 derived 中定义',
+                'actual':   f'未找到',
+                'fix':      f'在 invariants.constants 中加 {eps_var}',
+            })
+            continue
+        for bound in ('low', 'high'):
+            declared = float(t.get(bound, 0))
+            pe = float(t.get(f'pe_{bound}', 0))
+            expected = pe * eps
+            if abs(declared - expected) / max(abs(expected), 1e-9) > 0.01:
+                fails.append({
+                    'check': 'CONS-target-mult',
+                    'location': f'invariants.targets.{level}.{bound}',
+                    'expected': f'pe_{bound}({pe}) * {eps_var}({eps}) = {expected:.2f}',
+                    'actual':   f'{declared}',
+                    'fix':      f'修正 targets.{level}.{bound} 为 {expected:.2f}，或调整 pe_{bound}/{eps_var}',
+                })
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -155,7 +208,8 @@ def main() -> int:
 
     fails: list[dict] = []
     check_derived(inv, report_md, fails)
-    # 后续 task B3-B7 逐步加 check_target_mult / check_anomaly_titles / check_baseline_eps / check_score_consistency / expand_explicit_refs
+    check_target_mult(inv, fails)
+    # 后续 task B4-B7 逐步加 check_anomaly_titles / check_baseline_eps / check_score_consistency / expand_explicit_refs
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:

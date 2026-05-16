@@ -121,9 +121,9 @@ derived:
 keywords:
   market_cap_yi: ["市值"]
 targets:
-  short: {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
-  mid:   {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
-  long:  {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  short: {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
+  mid:   {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
+  long:  {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
 anomalies: []
 '''
     # invariants 区域不应被扫描到；正文里没有"市值 数字"组合
@@ -143,9 +143,9 @@ derived:
 keywords:
   market_cap_yi: ["市值", "总市值"]
 targets:
-  short: {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
-  mid:   {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
-  long:  {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  short: {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
+  mid:   {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
+  long:  {low: 10, high: 10, pe_low: 1, pe_high: 1, eps_var: shares}
 anomalies: []
 '''
     # 错误的市值，应该报 1 个 FAIL 而非 2 个
@@ -155,3 +155,46 @@ anomalies: []
     # 只应有 1 个 CONS-derived FAIL（不重复）
     cons_count = result.stdout.count('CONS-derived')
     assert cons_count == 1, f"应只有 1 个 CONS-derived FAIL，实际 {cons_count} 个：\n{result.stdout}"
+
+
+def test_cons_target_mult_passes():
+    """UT-08 · targets.mid.low == pe_low * eps_var → PASS"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    # 22 * 5.00 = 110 ✓；25 * 5.00 = 125 ✓
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
+    assert result.returncode == 0, result.stdout
+
+
+def test_cons_target_mult_fails():
+    """UT-09 · targets.long.low != pe_low * eps_var → FAIL"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    # long.low=150 vs pe_low(22) * eps(5.00) = 110，不匹配 → FAIL
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
+    assert result.returncode == 1
+    assert 'CONS-target-mult' in result.stdout
