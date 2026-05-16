@@ -70,7 +70,7 @@ CONS-baseline-eps / CONS-derived 用这些别名扫正文。
 
 ```yaml
 targets:
-  short:  {low: 96,  high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2027}
+  short:  {low: 96,  high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
   mid:    {low: 110, high: 125, pe_low: 22,   pe_high: 25,   eps_var: baseline_eps_2026}
   long:   {low: 150, high: 180, pe_low: 25,   pe_high: 30,   eps_var: baseline_eps_2027}
 ```
@@ -181,7 +181,7 @@ derived:
   pb: "price / book_value_per_share"
 
 targets:
-  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2027}
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
   mid:   {low: 110, high: 125, pe_low: 22,  pe_high: 25,  eps_var: baseline_eps_2026}
   long:  {low: 150, high: 180, pe_low: 25,  pe_high: 30,  eps_var: baseline_eps_2027}
 
