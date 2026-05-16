@@ -490,3 +490,72 @@ anomalies: []
 '''
     result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
     assert result.returncode == 0, result.stdout
+
+
+def test_explicit_ref_expansion_passes():
+    """UT-15 · 正文用 {{$targets.mid.low}} 引用，展开数字与 invariants 一致 → PASS"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies:
+  - {id: ANO-001, severity: CRITICAL, indicator: 营收, period: 2025FY, value: -54.55, unit: "%"}
+'''
+    body = '''中期目标价 110-{{$targets.mid.high}} 元。
+ANO-001 数值：{{$anomalies.ANO-001.value}}%。
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 0, result.stdout
+
+
+def test_explicit_ref_anomaly_by_id():
+    """UT-15b · {{$anomalies.ANO-001.value}} 应用 id 作主键解析"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies:
+  - {id: ANO-001, severity: CRITICAL, indicator: 营收, period: 2025FY, value: -54.55, unit: "%"}
+  - {id: ANO-002, severity: CRITICAL, indicator: 归母净利, period: 2025FY, value: -71.89, unit: "%"}
+'''
+    body = '营收同比 {{$anomalies.ANO-002.value}}%。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 0
+
+
+def test_explicit_ref_unknown_path_fails():
+    """UT-15c · 引用未声明的 path 应 FAIL"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    body = '不存在 {{$constants.nonexistent}} 字段。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1
+    assert 'CONS-explicit-ref' in result.stdout

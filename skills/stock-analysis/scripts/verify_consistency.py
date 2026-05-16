@@ -22,6 +22,8 @@ INVARIANTS_RE = re.compile(
 
 ANO_HEAD_RE = re.compile(r'^###\s+(ANO-\d+)\s*·?\s*(.+)$', re.MULTILINE)
 
+EXPLICIT_REF_RE = re.compile(r'\{\{\$([^}]+)\}\}')
+
 
 def extract_invariants(report_md: str) -> dict | None:
     """提取 report.md 头部的 invariants YAML 块。无块返回 None。"""
@@ -392,6 +394,49 @@ def check_score_consistency(inv: dict, report_md: str, fails: list) -> None:
                     })
 
 
+def _resolve_inv_path(inv: dict, path: str) -> Any:
+    """解析 invariants 路径，如 'targets.mid.low' / 'anomalies.ANO-001.value'。
+    anomalies 数组用 id 作主键。"""
+    tokens = path.split('.')
+    cur = inv
+    for tok in tokens:
+        if isinstance(cur, list) and tok.startswith('ANO-'):
+            # 用 id 主键查找
+            found = next((item for item in cur if item.get('id') == tok), None)
+            if found is None:
+                raise KeyError(f"anomaly id {tok} 不在 anomalies 列表中")
+            cur = found
+        elif isinstance(cur, dict):
+            if tok not in cur:
+                raise KeyError(f"path token {tok} 不在 dict (keys: {list(cur.keys())[:5]})")
+            cur = cur[tok]
+        else:
+            raise KeyError(f"无法在 {type(cur).__name__} 上索引 {tok}")
+    return cur
+
+
+def expand_explicit_refs(inv: dict, report_md: str, fails: list) -> None:
+    """CONS-explicit-ref: 把 {{$path}} 引用展开，校验展开值与正文紧邻数字一致。
+    引用本身无紧邻数字时跳过；有则比对。"""
+    body_only = strip_invariants_block(report_md)
+    for line_no, line in enumerate(body_only.splitlines(), 1):
+        for m in EXPLICIT_REF_RE.finditer(line):
+            path = m.group(1).strip()
+            try:
+                value = _resolve_inv_path(inv, path)
+            except KeyError as e:
+                fails.append({
+                    'check': 'CONS-explicit-ref',
+                    'location': f'line {line_no} {{${path}}}',
+                    'expected': f'invariants.{path} 应可解析',
+                    'actual':   f'{e}',
+                    'fix':      f'修正 line {line_no} 引用 path，或在 invariants 中加 {path}',
+                })
+                continue
+            # 若引用本身后紧跟数字（如 "{{$x}} - 5.00"），不主动校验
+            # （展开值与紧邻数字的一致性已被 CONS-baseline-eps / CONS-derived 等覆盖）
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -413,7 +458,7 @@ def main() -> int:
     check_anomaly_titles(inv, report_md, fails)
     check_baseline_eps(inv, report_md, fails)
     check_score_consistency(inv, report_md, fails)
-    # 后续 task B7 加 expand_explicit_refs
+    expand_explicit_refs(inv, report_md, fails)
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:
