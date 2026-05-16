@@ -128,3 +128,21 @@ def test_tag_re_supports_zero_and_positive_index():
     assert len(tags) == 2
     assert tags[0].payload == 'rows[0].name'
     assert tags[1].payload == 'items[42].val'
+
+
+def test_formula_independent_minus():
+    """UT-02 · Independent - in formula should be operator, not path"""
+    from verify_facts import eval_formula
+    data = {"a": 10, "b": 5}
+    # 10 / 5 - 1 = 1.0
+    result = eval_formula("a / b - 1", data)
+    assert abs(result - 1.0) < 1e-9
+
+
+def test_formula_independent_plus_minus_mix():
+    """UT-02b · Mixed +/-/*/( ) should all work"""
+    from verify_facts import eval_formula
+    data = {"x": 100, "y": 25}
+    # (100 - 25) * 2 / 25 = 6.0
+    result = eval_formula("(x - y) * 2 / y", data)
+    assert abs(result - 6.0) < 1e-9

@@ -121,6 +121,10 @@ def eval_formula(formula: str, data: Any) -> float:
     """解析 [C:] 公式：path 引用替换为数值后 eval。仅允许 + - * / 与数字。"""
     def replace(m):
         tok = m.group(0)
+        # 单字符运算符直接放行（修 v3.1 独立 `-` 陷阱）
+        if tok in ('-', '+', '*', '/'):
+            return tok
+        # 数字字面量（含负号 / 科学记数法）
         if tok.replace('.', '').replace('-', '').replace('e', '').replace('E', '').isdigit():
             return tok
         try:
