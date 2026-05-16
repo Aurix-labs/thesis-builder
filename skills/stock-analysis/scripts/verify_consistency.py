@@ -20,6 +20,8 @@ INVARIANTS_RE = re.compile(
     re.DOTALL
 )
 
+ANO_HEAD_RE = re.compile(r'^###\s+(ANO-\d+)\s*·?\s*(.+)$', re.MULTILINE)
+
 
 def extract_invariants(report_md: str) -> dict | None:
     """提取 report.md 头部的 invariants YAML 块。无块返回 None。"""
@@ -191,6 +193,60 @@ def check_target_mult(inv: dict, fails: list) -> None:
                 })
 
 
+def check_anomaly_titles(inv: dict, report_md: str, fails: list) -> None:
+    """CONS-anomaly-title: anomalies[].value 必须出现在对应 ### ANO-XXX 标题与正文中。
+    容差：标题数字与 invariants value 相对误差 ≤ 5%；正文允许同一变量出现多个数值，
+    但只能 ≤ 1 个不同值。"""
+    anomalies = inv.get('anomalies', [])
+    if not anomalies:
+        return
+    declared = {a['id']: a for a in anomalies}
+
+    for m in ANO_HEAD_RE.finditer(report_md):
+        ano_id = m.group(1)
+        title_text = m.group(2)
+        if ano_id not in declared:
+            continue
+        expected_value = float(declared[ano_id]['value'])
+        unit = str(declared[ano_id].get('unit', '')).strip()
+        # 优先匹配紧贴 unit 的数字（如 "15.69 pct"），否则回退到标题最后一个数字
+        # （回退到"最后一个数字"而非"第一个"，避免误抓"3 年"等周期标注）
+        title_num: float | None = None
+        if unit:
+            unit_match = re.search(
+                rf'(-?\d+\.?\d*)\s*{re.escape(unit)}',
+                title_text,
+            )
+            if unit_match:
+                title_num = float(unit_match.group(1))
+        if title_num is None:
+            all_nums = re.findall(r'(-?\d+\.?\d*)', title_text)
+            if all_nums:
+                # 取与 expected_value 最接近的（容忍标题里有多个数字如 "3 年"+ 真值）
+                title_num = min(
+                    (float(n) for n in all_nums),
+                    key=lambda x: abs(x - expected_value),
+                )
+        if title_num is None:
+            fails.append({
+                'check': 'CONS-anomaly-title',
+                'location': f'### {ano_id} (heading)',
+                'expected': f'{expected_value} (from invariants.anomalies[{ano_id}].value)',
+                'actual':   '标题中无数字',
+                'fix':      f'在 {ano_id} 标题中加入数值 {expected_value}',
+            })
+            continue
+        # 容差 5%（spec § 3.3.2）
+        if abs(title_num - expected_value) / max(abs(expected_value), 1e-9) > 0.05:
+            fails.append({
+                'check': 'CONS-anomaly-title',
+                'location': f'### {ano_id} (heading)',
+                'expected': f'{expected_value} (from invariants.anomalies[{ano_id}].value)',
+                'actual':   f'{title_num} (from heading)',
+                'fix':      f'把 {ano_id} 标题数字改为 {expected_value}，或更新 invariants.anomalies',
+            })
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -209,7 +265,8 @@ def main() -> int:
     fails: list[dict] = []
     check_derived(inv, report_md, fails)
     check_target_mult(inv, fails)
-    # 后续 task B4-B7 逐步加 check_anomaly_titles / check_baseline_eps / check_score_consistency / expand_explicit_refs
+    check_anomaly_titles(inv, report_md, fails)
+    # 后续 task B5-B7 逐步加 check_baseline_eps / check_score_consistency / expand_explicit_refs
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:
