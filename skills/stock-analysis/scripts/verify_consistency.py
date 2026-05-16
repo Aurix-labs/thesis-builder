@@ -287,6 +287,111 @@ def check_baseline_eps(inv: dict, report_md: str, fails: list) -> None:
                             break  # 一处一次 FAIL，不重复
 
 
+GRADE_RANGES = [
+    ('A', 80, 100),
+    ('B', 60, 79),
+    ('C', 40, 59),
+    ('D', 0, 39),
+]
+
+
+def _check_sum(score_block: dict, expected_keys: list[str], location: str, fails: list):
+    if not score_block:
+        return
+    total = score_block.get('total')
+    if total is None:
+        return
+    actual_sum = sum(float(score_block.get(k, 0)) for k in expected_keys)
+    if abs(actual_sum - float(total)) > 0.5:  # 整数容差
+        fails.append({
+            'check': 'CONS-score-consistency',
+            'location': location,
+            'expected': f'{" + ".join(expected_keys)} = {actual_sum}',
+            'actual':   f'total = {total}',
+            'fix':      f'修正 {location}.total 为 {actual_sum:g}，或调整各维分',
+        })
+
+
+def check_score_consistency(inv: dict, report_md: str, fails: list) -> None:
+    """CONS-score-consistency: 评分体系内部自洽（spec § 3.3.2 末行 + § 3.3.1 可选段）"""
+    # 1. five_dim_score: 5 维加和 == total，grade 与 total 区间一致
+    fd = inv.get('five_dim_score')
+    if fd:
+        _check_sum(
+            fd,
+            ['fundamental', 'capital', 'technical', 'sentiment', 'catalyst'],
+            'invariants.five_dim_score',
+            fails,
+        )
+        total = fd.get('total')
+        grade = fd.get('grade')
+        if total is not None and grade:
+            expected_grade = None
+            for g, lo, hi in GRADE_RANGES:
+                if lo <= float(total) <= hi:
+                    expected_grade = g
+                    break
+            if expected_grade and grade != expected_grade:
+                fails.append({
+                    'check': 'CONS-score-consistency',
+                    'location': 'invariants.five_dim_score.grade',
+                    'expected': f'{expected_grade} (total={total} → 区间 {expected_grade})',
+                    'actual':   grade,
+                    'fix':      f'修正 grade 为 {expected_grade}',
+                })
+
+    # 2. rubric_six_dim: 6 维加和 == total
+    rb = inv.get('rubric_six_dim')
+    if rb:
+        _check_sum(
+            rb,
+            ['fundamental', 'industry_fit', 'elasticity', 'valuation', 'capital', 'governance'],
+            'invariants.rubric_six_dim',
+            fails,
+        )
+
+    # 3. speculation_risk: 5 维加和 == total
+    sp = inv.get('speculation_risk')
+    if sp:
+        _check_sum(
+            sp,
+            ['fundamental_decoupling', 'valuation_bubble', 'fund_speculation', 'sentiment_hype', 'technical_pattern'],
+            'invariants.speculation_risk',
+            fails,
+        )
+
+    # 4. screening_19: passed + len(failed_items) == total
+    sc = inv.get('screening_19')
+    if sc:
+        passed = sc.get('passed', 0)
+        failed_items = sc.get('failed_items') or []
+        total = sc.get('total', 0)
+        if int(passed) + len(failed_items) != int(total):
+            fails.append({
+                'check': 'CONS-score-consistency',
+                'location': 'invariants.screening_19',
+                'expected': f'passed({passed}) + len(failed_items)({len(failed_items)}) = {total}',
+                'actual':   f'{int(passed) + len(failed_items)}',
+                'fix':      '调整 screening_19.passed / failed_items / total 使三者一致',
+            })
+
+        # 正文一致性：keywords.screening_19_passed 列出别名时扫数字
+        keywords = inv.get('keywords', {})
+        kw_list = keywords.get('screening_19_passed', [])
+        if kw_list:
+            body_only = strip_invariants_block(report_md)
+            occurrences = find_keyword_near_number(body_only, kw_list)
+            for line_no, num, kw in occurrences:
+                if int(num) != int(passed):
+                    fails.append({
+                        'check': 'CONS-score-consistency',
+                        'location': f'line {line_no} (near "{kw}")',
+                        'expected': f'{passed} (from invariants.screening_19.passed)',
+                        'actual':   f'{num:g}',
+                        'fix':      f'修正 line {line_no} 数字为 {passed}',
+                    })
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -307,7 +412,8 @@ def main() -> int:
     check_target_mult(inv, fails)
     check_anomaly_titles(inv, report_md, fails)
     check_baseline_eps(inv, report_md, fails)
-    # 后续 task B6-B7 逐步加 check_score_consistency / expand_explicit_refs
+    check_score_consistency(inv, report_md, fails)
+    # 后续 task B7 加 expand_explicit_refs
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:

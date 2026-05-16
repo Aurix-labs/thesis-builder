@@ -398,3 +398,95 @@ anomalies: []
     result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
     assert result.returncode == 1
     assert 'CONS-baseline-eps' in result.stdout
+
+
+def _yaml_with_five_dim(fundamental, capital, technical, sentiment, catalyst, total, grade):
+    return f'''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {{}}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {{low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}}
+  mid:   {{low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}}
+  long:  {{low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}}
+anomalies: []
+five_dim_score:
+  fundamental: {fundamental}
+  capital: {capital}
+  technical: {technical}
+  sentiment: {sentiment}
+  catalyst: {catalyst}
+  total: {total}
+  grade: {grade}
+'''
+
+
+def test_cons_five_dim_sum_mismatch_fails():
+    """UT-17 · 5 维分加和 != total → FAIL"""
+    # 28+12+8+11+6 = 65，但写 total=70
+    yaml_body = _yaml_with_five_dim(28, 12, 8, 11, 6, 70, 'B')
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
+    assert result.returncode == 1
+    assert 'CONS-score-consistency' in result.stdout
+
+
+def test_cons_five_dim_grade_mismatch_fails():
+    """UT-18 · grade=B 但 total=55（应为 C） → FAIL"""
+    yaml_body = _yaml_with_five_dim(15, 10, 8, 11, 11, 55, 'B')
+    # 15+10+8+11+11 = 55 ✓ sum OK，但 55 应 grade=C
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
+    assert result.returncode == 1
+    assert 'CONS-score-consistency' in result.stdout
+    assert 'grade' in result.stdout.lower()
+
+
+def test_cons_screening_19_count_mismatch_fails():
+    """UT-19 · screening_19.passed=17 但正文写"通过 18 项" → FAIL"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+  screening_19_passed: ["通过项数", "通过"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+screening_19:
+  passed: 17
+  total: 19
+  failed_items: [VAL-01, FUND-01]
+'''
+    # passed(17) + len(failed_items)(2) = 19 = total ✓ self-consistent
+    # 但正文写"通过 18 项" → 关键词扫描应报 FAIL
+    body = '19 项快速筛选清单：通过 18 项。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1
+
+
+def test_cons_five_dim_omitted_skips_check():
+    """UT-20 · invariants 不含 five_dim_score → 跳过该检查，0 FAIL"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body))
+    assert result.returncode == 0, result.stdout
