@@ -19,6 +19,26 @@ TAG_RE = re.compile(r'\[(F|C|I|T|GAP):((?:[^\[\]]|\[-?\d+\])+)\]')
 NUM_RE = re.compile(r'(-?\d+\.?\d*)\s*(亿|万|%|倍|元|万手|手)?')
 
 
+# v3.2: 标签单位归一化
+UNIT_SCALES = {
+    "亿": 1e8,
+    "万": 1e4,
+    "千": 1e3,
+    "%": 1,      # akshare 百分比字段已是 0-100 区间，不缩放
+    "pct": 1,    # 同 %，文档习惯
+    "倍": 1,
+    "元": 1,     # 默认，等价于不带后缀
+}
+
+
+def parse_payload(payload: str) -> tuple[str, str | None]:
+    """拆 path|unit 后缀。返回 (path, unit)，无后缀时 unit=None。"""
+    if '|' in payload:
+        path, unit = payload.rsplit('|', 1)
+        return path.strip(), unit.strip()
+    return payload, None
+
+
 @dataclass
 class Tag:
     kind: str        # 'F' / 'C' / 'I' / 'T' / 'GAP'
@@ -89,9 +109,11 @@ def rel_diff(a: float, b: float) -> float:
 
 
 def check_f_tag(tag: Tag, data: Any) -> dict | None:
-    """返回 None 表示 PASS，否则返回 fail dict。"""
+    """返回 None 表示 PASS，否则返回 fail dict。v3.2 支持 |单位 后缀。"""
+    path, unit = parse_payload(tag.payload)
     try:
-        expected = float(resolve_path(data, tag.payload))
+        raw = resolve_path(data, path)
+        expected = float(raw) / UNIT_SCALES.get(unit, 1) if unit else float(raw)
     except (KeyError, ValueError, TypeError) as e:
         return {
             "kind": "FAIL", "tag": f"[F:{tag.payload}]", "line": tag.line_no,
@@ -106,10 +128,11 @@ def check_f_tag(tag: Tag, data: Any) -> dict | None:
             "fix": f"line {tag.line_no} 标签前应紧跟数字（含单位）"
         }
     if rel_diff(actual, expected) > 0.01:
+        unit_str = f" {unit}" if unit else ""
         return {
             "kind": "FAIL", "tag": f"[F:{tag.payload}]", "line": tag.line_no,
-            "reason": f"标 {actual:.4g} vs data.json {expected:.4g}，差 {rel_diff(actual, expected)*100:.1f}%",
-            "fix": f"修改 line {tag.line_no} 数字与单位（亿/万/%），或调整 path"
+            "reason": f"标 {actual:.4g}{unit_str} vs data.json normalized {expected:.4g}{unit_str}，差 {rel_diff(actual, expected)*100:.1f}%",
+            "fix": f"修改 line {tag.line_no} 数字、单位或调整 |单位 后缀"
         }
     return None
 

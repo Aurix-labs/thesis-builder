@@ -146,3 +146,55 @@ def test_formula_independent_plus_minus_mix():
     # (100 - 25) * 2 / 25 = 6.0
     result = eval_formula("(x - y) * 2 / y", data)
     assert abs(result - 6.0) < 1e-9
+
+
+def test_parse_payload_with_unit():
+    """UT-03a · parse_payload splits path and |unit"""
+    from verify_facts import parse_payload
+    assert parse_payload("financials.营业总收入.20251231|亿") == \
+        ("financials.营业总收入.20251231", "亿")
+    assert parse_payload("financials.毛利率.20251231|%") == \
+        ("financials.毛利率.20251231", "%")
+    assert parse_payload("simple.path") == ("simple.path", None)
+
+
+def test_unit_scales_constant():
+    """UT-03b · UNIT_SCALES has 7 units"""
+    from verify_facts import UNIT_SCALES
+    assert UNIT_SCALES["亿"] == 1e8
+    assert UNIT_SCALES["万"] == 1e4
+    assert UNIT_SCALES["千"] == 1e3
+    assert UNIT_SCALES["%"] == 1
+    assert UNIT_SCALES["pct"] == 1
+    assert UNIT_SCALES["倍"] == 1
+    assert UNIT_SCALES["元"] == 1
+
+
+def test_check_f_tag_with_unit_normalization():
+    """UT-03c · [F:path|亿] should divide data by 1e8 before comparing"""
+    from verify_facts import check_f_tag, Tag
+    data = {"financials": {"营业总收入": {"20251231": 40528509770.23}}}
+    tag = Tag(
+        kind='F',
+        payload='financials.营业总收入.20251231|亿',
+        line_no=1,
+        line='营收 405.29 亿 [F:financials.营业总收入.20251231|亿]',
+        col=len('营收 405.29 亿 ')
+    )
+    assert check_f_tag(tag, data) is None  # PASS
+
+
+def test_check_f_tag_unit_mismatch_fails():
+    """UT-03d · Unit mismatch should FAIL with readable error"""
+    from verify_facts import check_f_tag, Tag
+    data = {"x": 40528509770.23}  # actually 405.29 亿
+    tag = Tag(
+        kind='F',
+        payload='x|亿',
+        line_no=1,
+        line='错误数字 100 亿 [F:x|亿]',
+        col=len('错误数字 100 亿 ')
+    )
+    result = check_f_tag(tag, data)
+    assert result is not None
+    assert result['kind'] == 'FAIL'
