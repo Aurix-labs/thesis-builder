@@ -42,4 +42,30 @@ assert "output FAIL marker" 0 $rc
 
 echo ""
 echo "$passed passed, $failed failed"
+
+# === v3.2 chain smoke test ===
+echo ""
+echo "=== v3.2 chain smoke test ==="
+
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+TMPDIR=$(mktemp -d)
+
+# 用既有 fixtures/pass.html + 临时空 data.json + 临时空 report.md
+cp "$DIR/tests/fixtures/pass.html" "$TMPDIR/report.html"
+echo '{}' > "$TMPDIR/data.json"
+echo '# Empty report' > "$TMPDIR/report.md"
+
+set +e
+bash "$DIR/verify_html.sh" "$TMPDIR/report.html"
+RC=$?
+set -e
+
+if [ $RC -eq 0 ]; then
+  echo "PASS: v3.2 chain ok (空 report → WARN, exit 0)"
+else
+  echo "FAIL: v3.2 chain rc=$RC"
+  failed=$((failed+1))
+fi
+rm -rf "$TMPDIR"
+
 exit $failed

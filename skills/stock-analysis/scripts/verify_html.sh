@@ -83,7 +83,16 @@ if [ -f "$DATA" ] && [ -f "$REPORT" ]; then
     echo "[FAIL] verify_content.py 失败 (rc=$CONTENT_RC)"
     exit 1
   fi
+
+  # v3.2: 跨节一致性校验
+  python "$SCRIPT_DIR/verify_consistency.py" \
+    --report "$REPORT" --data "$DATA"
+  CONS_RC=$?
+  if [ $CONS_RC -ne 0 ]; then
+    echo "[FAIL] verify_consistency.py 失败 (rc=$CONS_RC)"
+    exit 1
+  fi
 else
-  echo "[WARN] 未找到 data.json 或 report.md，跳过 verify_content"
+  echo "[WARN] 未找到 data.json 或 report.md，跳过 verify_content / verify_consistency"
 fi
 exit 0
