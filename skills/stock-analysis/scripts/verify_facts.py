@@ -138,7 +138,7 @@ def check_f_tag(tag: Tag, data: Any) -> dict | None:
     return None
 
 
-FORMULA_TOKEN = re.compile(r'[\w\.\[\]\-]+')
+FORMULA_TOKEN = re.compile(r'[\w\.\[\]\-\|]+')
 
 
 # v3.2: 公式白名单函数

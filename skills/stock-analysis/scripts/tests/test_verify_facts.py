@@ -231,3 +231,22 @@ def test_formula_disallows_builtins():
     import pytest
     with pytest.raises((ValueError, NameError)):
         eval_formula("__import__('os').system('echo pwned')", {})
+
+
+def test_formula_unit_suffix_in_path_token():
+    """UT-04e · path 引用支持 |单位 后缀（确保 parse_payload 在 eval_formula 中可达）"""
+    from verify_facts import eval_formula
+    # raw data 1e8 元 → with |亿 → 1.0 亿
+    data = {"revenue": 8e8, "start": 1e8}
+    # revenue|亿 = 8.0, start|亿 = 1.0, ratio = 8.0
+    result = eval_formula("revenue|亿 / start|亿", data)
+    assert abs(result - 8.0) < 1e-9
+
+
+def test_formula_unit_with_pow():
+    """UT-04f · CAGR 表达式 + 单位后缀都能正常解析"""
+    from verify_facts import eval_formula
+    data = {"end": 8e9, "start": 1e9}
+    # pow(end|亿 / start|亿, 1/3) = pow(8, 1/3) ≈ 2.0
+    result = eval_formula("pow(end|亿 / start|亿, 1/3)", data)
+    assert abs(result - 2.0) < 1e-9
