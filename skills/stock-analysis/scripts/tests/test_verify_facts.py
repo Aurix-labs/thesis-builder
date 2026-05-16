@@ -250,3 +250,49 @@ def test_formula_unit_with_pow():
     # pow(end|亿 / start|亿, 1/3) = pow(8, 1/3) ≈ 2.0
     result = eval_formula("pow(end|亿 / start|亿, 1/3)", data)
     assert abs(result - 2.0) < 1e-9
+
+
+def test_backward_compat_no_unit_suffix():
+    """UT-05a · Tag without |unit behaves identically to v3.1"""
+    from verify_facts import check_f_tag, Tag
+    data = {"financials": {"2025": {"revenue": 15.89}}}
+    tag = Tag(
+        kind='F',
+        payload='financials.2025.revenue',
+        line_no=1,
+        line='营收 15.89 亿 [F:financials.2025.revenue]',
+        col=len('营收 15.89 亿 ')
+    )
+    # 数字 15.89 与 data 15.89 完全匹配
+    assert check_f_tag(tag, data) is None
+
+
+def test_backward_compat_formula_no_pow():
+    """UT-05b · Existing formulas without pow/sqrt still PASS"""
+    from verify_facts import eval_formula
+    data = {"price": 86.87, "shares": 38.82}
+    result = eval_formula("price * shares", data)
+    assert abs(result - 3372.2934) < 1e-3
+
+
+def test_backward_compat_mini_report_still_passes():
+    """UT-05c · Existing fixtures/mini_report.md + mini_data.json full chain:
+    保持 pre-A1 (commit 4b5ad1b) 完全相同的输出签名 — 3 PASS / 2 FAIL，
+    且失败原因为既有 fixture 数据不一致（不是 A1-A4 引入的回归）。
+    """
+    import subprocess
+    from pathlib import Path
+    script = Path(__file__).parent.parent / 'verify_facts.py'
+    fix = Path(__file__).parent / 'fixtures'
+    result = subprocess.run(
+        ['python', str(script),
+         '--report', str(fix / 'mini_report.md'),
+         '--data', str(fix / 'mini_data.json'),
+         '--mode', 'full'],
+        capture_output=True, text=True
+    )
+    # 锁定 pre-A1 行为：PASS/FAIL/WARN 计数完全一致
+    assert '[PASS] 3 / [FAIL] 2 / [WARN] 0' in result.stdout
+    # 锁定 FAIL 原因签名（fixture 既有问题，非 A1-A4 引入）
+    assert "path token 2025 invalid for list" in result.stdout
+    assert "标 162.5 vs 公式算出 1.625e+10" in result.stdout
