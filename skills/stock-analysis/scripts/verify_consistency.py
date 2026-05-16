@@ -33,6 +33,17 @@ def extract_invariants(report_md: str) -> dict | None:
         return None
 
 
+def strip_invariants_block(report_md: str) -> str:
+    """从 report_md 中删除 invariants 块内容，保留行数（用空行替换），
+    避免正文扫描误匹配 invariants 内 keyword + 数字组合，同时维持 line_no。"""
+    m = INVARIANTS_RE.search(report_md)
+    if not m:
+        return report_md
+    block_text = report_md[m.start(): m.end()]
+    blank_replacement = '\n' * block_text.count('\n')
+    return report_md[:m.start()] + blank_replacement + report_md[m.end():]
+
+
 def safe_eval_expr(expr: str, ctx: dict) -> float:
     """安全 eval 算式字符串：只允许 + - * / ( ) 与 ctx 字典里的变量名。
     返回 float。"""
@@ -53,13 +64,17 @@ def safe_eval_expr(expr: str, ctx: dict) -> float:
     replaced = name_re.sub(replace_name, expr)
     if re.search(r'[^0-9.\-\+\*/()\s]', replaced):
         raise ValueError(f"算式含非法字符：{replaced}")
-    return float(eval(replaced))  # noqa: S307
+    try:
+        return float(eval(replaced))  # noqa: S307
+    except ZeroDivisionError:
+        raise ValueError(f"算式除零：{expr}")
 
 
 def find_keyword_near_number(report_md: str, keywords: list[str]) -> list[tuple[int, float, str]]:
     """扫描 report_md，找到任一 keyword 后同行 ±40 字符内的数字。
-    返回 [(line_no, number, matched_keyword), ...]"""
-    results = []
+    返回 [(line_no, number, matched_keyword), ...]，按 (line_no, number) 去重
+    （重叠别名如 ["市值", "总市值"] 命中同一 span 时，保留更长的别名）。"""
+    raw: list[tuple[int, float, str]] = []
     for line_no, line in enumerate(report_md.splitlines(), 1):
         for kw in keywords:
             for m in re.finditer(re.escape(kw), line):
@@ -67,9 +82,18 @@ def find_keyword_near_number(report_md: str, keywords: list[str]) -> list[tuple[
                 window = line[m.end(): m.end() + 40]
                 num_match = re.search(r'(-?\d+\.?\d*)', window)
                 if num_match:
-                    results.append((line_no, float(num_match.group(1)), kw))
+                    raw.append((line_no, float(num_match.group(1)), kw))
                     break
-    return results
+    # 去重：同 (line_no, number) 只保留首次（更长的别名优先）
+    raw.sort(key=lambda t: -len(t[2]))
+    seen: set[tuple[int, float]] = set()
+    out: list[tuple[int, float, str]] = []
+    for line_no, num, kw in raw:
+        key = (line_no, num)
+        if key not in seen:
+            seen.add(key)
+            out.append((line_no, num, kw))
+    return out
 
 
 def check_derived(inv: dict, report_md: str, fails: list) -> None:
@@ -80,11 +104,12 @@ def check_derived(inv: dict, report_md: str, fails: list) -> None:
 
     # 构造 eval 上下文：constants + 先算出的 derived
     ctx = dict(constants)
+    body_only = strip_invariants_block(report_md)
     for key, expr in derived_exprs.items():
         if isinstance(expr, str):
             try:
                 value = safe_eval_expr(expr, ctx)
-            except (ValueError, KeyError) as e:
+            except (ValueError, KeyError, ZeroDivisionError) as e:
                 fails.append({
                     'check': 'CONS-derived',
                     'location': f'invariants.derived.{key}',
@@ -97,11 +122,11 @@ def check_derived(inv: dict, report_md: str, fails: list) -> None:
             value = float(expr)  # 直接声明数值
         ctx[key] = value
 
-        # 扫正文找 keyword 附近数字
+        # 扫正文找 keyword 附近数字（剥离 invariants 块，避免自扫）
         kw_list = keywords.get(key, [])
         if not kw_list:
             continue  # 没有 keyword 别名表，跳过正文比对
-        occurrences = find_keyword_near_number(report_md, kw_list)
+        occurrences = find_keyword_near_number(body_only, kw_list)
         for line_no, num, kw in occurrences:
             if abs(num - value) / max(abs(value), 1e-9) > 0.01:
                 fails.append({

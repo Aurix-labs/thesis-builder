@@ -86,3 +86,72 @@ anomalies: []
     assert result.returncode == 1, f"应 FAIL 但得到：\n{result.stdout}"
     assert 'CONS-derived' in result.stdout
     assert 'expected' in result.stdout
+
+
+def test_cons_derived_handles_zero_division():
+    """B2 fix · derived 算式除零应产生 FAIL，而非 crash"""
+    yaml_body = '''constants:
+  numerator: 10
+  zero_const: 0
+derived:
+  bad: "numerator / zero_const"
+keywords:
+  bad: ["bad value"]
+targets:
+  short: {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: numerator}
+  mid:   {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: numerator}
+  long:  {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: numerator}
+anomalies: []
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + 'bad value 999')
+    # Expect: returncode 1, contains CONS-derived FAIL, no Python traceback
+    assert result.returncode == 1
+    assert 'Traceback' not in result.stdout
+    assert 'Traceback' not in result.stderr
+    assert 'CONS-derived' in result.stdout
+
+
+def test_cons_derived_skips_invariants_block_when_scanning_body():
+    """B2 fix · 正文扫描不应误匹配 invariants 块内字符串"""
+    yaml_body = '''constants:
+  price: 100
+  shares: 10
+derived:
+  market_cap_yi: "price * shares"
+keywords:
+  market_cap_yi: ["市值"]
+targets:
+  short: {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  mid:   {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  long:  {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+anomalies: []
+'''
+    # invariants 区域不应被扫描到；正文里没有"市值 数字"组合
+    body = '本报告分析公司业绩。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    # 期望 PASS：正文没有 keyword，derived 算式自洽（1000），但因正文未出现 keyword 别名 → 无比对
+    assert result.returncode == 0, f"应 PASS（无正文出现），实际：\n{result.stdout}"
+
+
+def test_cons_derived_no_duplicate_fails_for_overlapping_aliases():
+    """B2 fix · 重叠别名（市值 ⊂ 总市值）不应产生重复 FAIL"""
+    yaml_body = '''constants:
+  price: 100
+  shares: 10
+derived:
+  market_cap_yi: "price * shares"
+keywords:
+  market_cap_yi: ["市值", "总市值"]
+targets:
+  short: {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  mid:   {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+  long:  {low: 1, high: 1, pe_low: 1, pe_high: 1, eps_var: price}
+anomalies: []
+'''
+    # 错误的市值，应该报 1 个 FAIL 而非 2 个
+    body = '当前总市值 9999 亿元。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1
+    # 只应有 1 个 CONS-derived FAIL（不重复）
+    cons_count = result.stdout.count('CONS-derived')
+    assert cons_count == 1, f"应只有 1 个 CONS-derived FAIL，实际 {cons_count} 个：\n{result.stdout}"
