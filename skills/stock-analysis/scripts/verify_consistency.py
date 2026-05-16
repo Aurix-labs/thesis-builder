@@ -194,9 +194,14 @@ def check_target_mult(inv: dict, fails: list) -> None:
 
 
 def check_anomaly_titles(inv: dict, report_md: str, fails: list) -> None:
-    """CONS-anomaly-title: anomalies[].value 必须出现在对应 ### ANO-XXX 标题与正文中。
-    容差：标题数字与 invariants value 相对误差 ≤ 5%；正文允许同一变量出现多个数值，
-    但只能 ≤ 1 个不同值。"""
+    """CONS-anomaly-title: anomalies[].value 必须出现在对应 ### ANO-XXX 标题中。
+
+    匹配策略（unit-anchored，避免误抓无关数字如 "3 年"）：
+    1. unit 非空时：在标题中搜索 `(-?\\d+\\.?\\d*)\\s*<unit>` 模式
+    2. unit 为空时：在标题中搜索任意带小数点的有符号小数（避免误抓整数如年份）
+    3. 找不到 → FAIL（不再用近似 "nearest-to-expected" heuristic）
+
+    容差：5%（spec § 3.3.2）"""
     anomalies = inv.get('anomalies', [])
     if not anomalies:
         return
@@ -207,42 +212,36 @@ def check_anomaly_titles(inv: dict, report_md: str, fails: list) -> None:
         title_text = m.group(2)
         if ano_id not in declared:
             continue
-        expected_value = float(declared[ano_id]['value'])
-        unit = str(declared[ano_id].get('unit', '')).strip()
-        # 优先匹配紧贴 unit 的数字（如 "15.69 pct"），否则回退到标题最后一个数字
-        # （回退到"最后一个数字"而非"第一个"，避免误抓"3 年"等周期标注）
-        title_num: float | None = None
+        anomaly = declared[ano_id]
+        expected_value = float(anomaly['value'])
+        unit = str(anomaly.get('unit', '') or '').strip()
+
+        # 构造单位锚定 regex
         if unit:
-            unit_match = re.search(
-                rf'(-?\d+\.?\d*)\s*{re.escape(unit)}',
-                title_text,
-            )
-            if unit_match:
-                title_num = float(unit_match.group(1))
-        if title_num is None:
-            all_nums = re.findall(r'(-?\d+\.?\d*)', title_text)
-            if all_nums:
-                # 取与 expected_value 最接近的（容忍标题里有多个数字如 "3 年"+ 真值）
-                title_num = min(
-                    (float(n) for n in all_nums),
-                    key=lambda x: abs(x - expected_value),
-                )
-        if title_num is None:
+            # `15.69 pct` / `-54.55%` / `89.54 亿`
+            anchor_re = re.compile(r'(-?\d+\.?\d*)\s*' + re.escape(unit))
+        else:
+            # 比率类无单位：要求带小数点（避免误抓整数如"3 年"中的 3）
+            anchor_re = re.compile(r'(-?\d+\.\d+)')
+
+        match = anchor_re.search(title_text)
+        if not match:
             fails.append({
                 'check': 'CONS-anomaly-title',
                 'location': f'### {ano_id} (heading)',
-                'expected': f'{expected_value} (from invariants.anomalies[{ano_id}].value)',
-                'actual':   '标题中无数字',
-                'fix':      f'在 {ano_id} 标题中加入数值 {expected_value}',
+                'expected': f'{expected_value}{f" {unit}" if unit else ""} (from invariants.anomalies[{ano_id}].value)',
+                'actual':   f'标题中未找到 {f"数值+单位 {unit}" if unit else "带小数点的数值"}',
+                'fix':      f'在 {ano_id} 标题中加入 {expected_value}{f" {unit}" if unit else ""}',
             })
             continue
-        # 容差 5%（spec § 3.3.2）
+
+        title_num = float(match.group(1))
         if abs(title_num - expected_value) / max(abs(expected_value), 1e-9) > 0.05:
             fails.append({
                 'check': 'CONS-anomaly-title',
                 'location': f'### {ano_id} (heading)',
-                'expected': f'{expected_value} (from invariants.anomalies[{ano_id}].value)',
-                'actual':   f'{title_num} (from heading)',
+                'expected': f'{expected_value}{f" {unit}" if unit else ""} (from invariants.anomalies[{ano_id}].value)',
+                'actual':   f'{title_num}{f" {unit}" if unit else ""} (from heading)',
                 'fix':      f'把 {ano_id} 标题数字改为 {expected_value}，或更新 invariants.anomalies',
             })
 

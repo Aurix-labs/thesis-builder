@@ -251,3 +251,82 @@ anomalies:
     assert result.returncode == 1
     assert 'CONS-anomaly-title' in result.stdout
     assert 'ANO-005' in result.stdout
+
+
+def test_cons_anomaly_title_ignores_unrelated_year_numbers():
+    """B4 fix · 标题中的年份数字（"3 年"）不应被误抓为 anomaly value"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies:
+  - {id: ANO-005, severity: HIGH, indicator: 资产负债率, period: 2023-2026Q1, value: 15.69, unit: pct}
+'''
+    # 标题里有"3 年"（年份数字）和"15.69 pct"（真正的 anomaly 值）
+    # 错误的实现可能误抓 3.0 而 FAIL；正确实现应锁 pct 单位附近 → 15.69 → PASS
+    body = '''### ANO-005 · 资产负债率 3 年累计上升 15.69 pct（HIGH）
+
+- 上升幅度：15.69 pct
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 0, f"应 PASS（unit-anchored），实际：\n{result.stdout}"
+
+
+def test_cons_anomaly_title_missing_unit_anchor_fails():
+    """B4 fix · 标题缺少 unit 锚点 → FAIL（不再用 fallback heuristic）"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies:
+  - {id: ANO-005, severity: HIGH, indicator: 资产负债率, period: 2023-2026Q1, value: 15.69, unit: pct}
+'''
+    # 标题里没有 "X pct" 模式 → 应该 FAIL（不应 fallback 匹配"3 年"附近的 3.0）
+    body = '''### ANO-005 · 资产负债率累计上升（标题写错了，缺少数值和单位）
+
+- 实际：15.69 pct
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1, f"应 FAIL，实际：\n{result.stdout}"
+    assert 'CONS-anomaly-title' in result.stdout
+
+
+def test_cons_anomaly_title_empty_unit():
+    """B4 fix · unit 为空时（如比率 -0.11）匹配带小数点的数字"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies:
+  - {id: ANO-003, severity: CRITICAL, indicator: 经现金流/营收, period: 2026Q1, value: -0.11, unit: ""}
+'''
+    body = '''### ANO-003 · 经现金流/营收 2026Q1 转负为 -0.11（首次）
+
+- 数值：-0.11
+'''
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 0, f"应 PASS，实际：\n{result.stdout}"
