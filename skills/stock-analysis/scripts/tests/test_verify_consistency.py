@@ -330,3 +330,71 @@ anomalies:
 '''
     result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
     assert result.returncode == 0, f"应 PASS，实际：\n{result.stdout}"
+
+
+def test_cons_baseline_eps_consistent():
+    """UT-12 · 正文 "基准 EPS26" 附近数字 == invariants → PASS"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26", "本框架基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    body = '本框架基准 EPS26 = 5.00 元。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 0, result.stdout
+
+
+def test_cons_baseline_eps_mismatch_fails():
+    """UT-13 · 正文 "基准 EPS26" 附近数字与 invariants 不一致 → FAIL"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026: ["基准 EPS26"]
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    body = '本框架基准 EPS26 = 5.50 元（实际应为 5.00）。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1
+    assert 'CONS-baseline-eps' in result.stdout
+
+
+def test_cons_baseline_eps_aliases():
+    """UT-16 · keywords 列出多个别名，正文用其中任一别名都应触发检查"""
+    yaml_body = '''constants:
+  price: 86.87
+  shares: 38.82
+  book_value_per_share: 32.97
+  baseline_eps_2026: 5.00
+derived: {}
+keywords:
+  baseline_eps_2026:
+    - "基准 EPS26"
+    - "本框架 EPS-2026"
+    - "Baseline EPS 2026"
+targets:
+  short: {low: 96, high: 100, pe_low: 19.2, pe_high: 20.0, eps_var: baseline_eps_2026}
+  mid:   {low: 110, high: 125, pe_low: 22, pe_high: 25, eps_var: baseline_eps_2026}
+  long:  {low: 150, high: 180, pe_low: 30, pe_high: 36, eps_var: baseline_eps_2026}
+anomalies: []
+'''
+    body = '本框架 EPS-2026 = 4.50（错值）。'
+    result = _run(INVARIANTS_HEAD.format(yaml_body=yaml_body) + body)
+    assert result.returncode == 1
+    assert 'CONS-baseline-eps' in result.stdout

@@ -246,6 +246,47 @@ def check_anomaly_titles(inv: dict, report_md: str, fails: list) -> None:
             })
 
 
+def check_baseline_eps(inv: dict, report_md: str, fails: list) -> None:
+    """CONS-baseline-eps: 正文出现 keywords.X 列出的别名时，同行 ±20 字符内
+    最近数字 ≈ inv.constants[X] ±1%。Markdown 表格按单元格分别扫描。"""
+    constants = inv.get('constants', {})
+    keywords = inv.get('keywords', {})
+
+    # 只检查 baseline_eps_2026 / baseline_eps_2027（spec § 3.3.2）
+    for var_name in ('baseline_eps_2026', 'baseline_eps_2027'):
+        if var_name not in constants:
+            continue
+        expected = float(constants[var_name])
+        kw_list = keywords.get(var_name, [])
+        if not kw_list:
+            continue
+
+        # Strip invariants block to avoid self-scan
+        body_only = strip_invariants_block(report_md)
+
+        for line_no, line in enumerate(body_only.splitlines(), 1):
+            # Markdown 表格按单元格分别扫描
+            cells = line.split('|') if '|' in line else [line]
+            for cell in cells:
+                for kw in kw_list:
+                    for m in re.finditer(re.escape(kw), cell):
+                        # 同行 ±20 字符窗口
+                        window = cell[m.end(): m.end() + 20]
+                        num_match = re.search(r'(-?\d+\.?\d*)', window)
+                        if not num_match:
+                            continue
+                        actual = float(num_match.group(1))
+                        if abs(actual - expected) / max(abs(expected), 1e-9) > 0.01:
+                            fails.append({
+                                'check': 'CONS-baseline-eps',
+                                'location': f'line {line_no} (near keyword "{kw}")',
+                                'expected': f'{expected} (from invariants.constants.{var_name})',
+                                'actual':   f'{actual}',
+                                'fix':      f'修正 line {line_no} 数字为 {expected}，或更新 invariants.constants.{var_name} / keywords.{var_name}',
+                            })
+                            break  # 一处一次 FAIL，不重复
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
@@ -265,7 +306,8 @@ def main() -> int:
     check_derived(inv, report_md, fails)
     check_target_mult(inv, fails)
     check_anomaly_titles(inv, report_md, fails)
-    # 后续 task B5-B7 逐步加 check_baseline_eps / check_score_consistency / expand_explicit_refs
+    check_baseline_eps(inv, report_md, fails)
+    # 后续 task B6-B7 逐步加 check_score_consistency / expand_explicit_refs
 
     print('=== verify_consistency · v3.2 ===')
     for f in fails:
