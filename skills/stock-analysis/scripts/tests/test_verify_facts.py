@@ -294,5 +294,38 @@ def test_backward_compat_mini_report_still_passes():
     # 锁定 pre-A1 行为：PASS/FAIL/WARN 计数完全一致
     assert '[PASS] 3 / [FAIL] 2 / [WARN] 0' in result.stdout
     # 锁定 FAIL 原因签名（fixture 既有问题，非 A1-A4 引入）
+    # v3.2 A6: 三段式后，原 "标 X vs Y" 被拆为 expected/actual 两行
     assert "path token 2025 invalid for list" in result.stdout
-    assert "标 162.5 vs 公式算出 1.625e+10" in result.stdout
+    assert "expected: 公式算出 1.625e+10" in result.stdout
+    assert "actual:   162.5" in result.stdout
+
+
+def test_error_output_format_three_section():
+    """UT-A6 · FAIL output should have expected / actual / fix three sections"""
+    import subprocess
+    from pathlib import Path
+    import tempfile
+    import json
+
+    # 准备一个故意 FAIL 的 fixture
+    with tempfile.TemporaryDirectory() as td:
+        report = Path(td) / 'r.md'
+        data = Path(td) / 'd.json'
+        # 报告标 100 但 data 是 50
+        report.write_text("营收 100 亿 [F:financials.营业总收入.20251231|亿]")
+        data.write_text(json.dumps({
+            "financials": {"营业总收入": {"20251231": 50e8}}
+        }))
+        script = Path(__file__).parent.parent / 'verify_facts.py'
+        result = subprocess.run(
+            ['python', str(script),
+             '--report', str(report),
+             '--data', str(data),
+             '--mode', 'partial'],
+            capture_output=True, text=True
+        )
+        # 三段式：expected / actual / fix 各占一行
+        assert 'expected:' in result.stdout
+        assert 'actual:' in result.stdout
+        assert 'fix:' in result.stdout
+        assert result.returncode == 1  # FAIL

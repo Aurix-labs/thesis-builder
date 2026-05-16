@@ -274,8 +274,19 @@ def main() -> int:
 
     print(f"=== verify_facts · {args.mode} · {len(tags)} tags ===")
     for r in fails + warns:
-        print(f"[{r['kind']}] L{r['line']} {r['tag']}: {r['reason']}")
-        print(f"  fix: {r['fix']}")
+        print(f"[{r['kind']}] L{r['line']} {r['tag']}")
+        # v3.2 三段式：尽量从 reason 中提取 expected/actual
+        reason = r.get('reason', '')
+        if ' vs ' in reason:
+            # 形如 "标 X vs data.json Y，差 Z%" 或 "标 X 亿 vs data.json normalized Y 亿，差 Z%"
+            parts = reason.split(' vs ', 1)
+            expected_part = parts[1].split('，差')[0].strip() if '，差' in parts[1] else parts[1].strip()
+            actual_part = parts[0].replace('标 ', '').strip()
+            print(f"  expected: {expected_part}")
+            print(f"  actual:   {actual_part}")
+        else:
+            print(f"  reason:   {reason}")
+        print(f"  fix:      {r['fix']}")
     print(f"\n[PASS] {len(tags) - len(fails) - len(warns)} / [FAIL] {len(fails)} / [WARN] {len(warns)}")
     return 1 if fails else (2 if warns else 0)
 
