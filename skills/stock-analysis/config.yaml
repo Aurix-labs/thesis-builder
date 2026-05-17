@@ -1,0 +1,46 @@
+# stock-analysis v4.0 模块配置（用户可直接编辑）
+
+modules:
+  chain:
+    ttl_days: 90
+    aliases: [industry, 产业链, 趋势]
+    description: 产业链与趋势（Step 1 宏观 + Step 2 产业链 + 趋势三要素）
+
+  rubric:
+    ttl_days: 90
+    aliases: [quality, 质地, 评分, 基本面]
+    description: 公司质地（Step 3 Rubric 100 分 + 不碰清单）
+
+  elasticity:
+    ttl_days: 90
+    aliases: [earnings, 弹性, 业绩]
+    description: 业绩弹性（Step 4 弹性树 + 价格敏感度 + 悲观/基准/乐观情景）
+
+  risk:
+    ttl_days: 30
+    aliases: [stoploss, 风险, 止损]
+    description: 风险与止损（Step 5 风险清单 + ≥3 条逻辑破坏 + Step 0.5 异常深挖）
+
+  valuation:
+    ttl_days: 7
+    aliases: [target, 估值, 目标价, 赔率]
+    description: 估值与赔率（Step 6 估值方法 + 三档目标价 + 研报对比 + 盈亏比）
+
+  flow-tech:
+    ttl_days: 1
+    aliases: [tech, 技术面, 资金面, 筹码]
+    description: 资金与技术面（Step 6a+ 资金面 + Step 6a++ K 线 / 均线 / MACD / 量价）
+
+  peers:
+    ttl_days: 90
+    aliases: [compare, 对标, 同业]
+    description: 同业对标（Step 7 对标公司表 + 增长引擎切换）
+
+  report:
+    aliases: [all, 全景, 完整, 全部, 报告]
+    description: 合成研究报告（依次跑 7 个分析模块按 TTL 复用，最后合成 HTML）
+
+defaults:
+  default_module: report
+  report_generates_html: true
+  peers_count: 5
