@@ -1,5 +1,6 @@
 """测试 fetch_risk + anomalies.md 生成。"""
 from pathlib import Path
+import json
 import sys
 
 HERE = Path(__file__).resolve().parent
@@ -35,3 +36,13 @@ def test_fetch_writes_data_and_anomalies(tmp_path):
     assert (out_dir / "data.json").exists()
     assert (out_dir / "anomalies.md").exists()
     assert (out_dir / "anomalies.json").exists()
+
+
+def test_anomalies_json_uses_v32_schema(tmp_path):
+    """anomalies.json 必须符合 v3.2 schema：含 $schema / as_of / code / items。"""
+    fetch("002594", "比亚迪", tmp_path, "2026-05-17", akshare_module=FakeAk())
+    content = json.loads((tmp_path / "risk" / "2026-05-17" / "anomalies.json").read_text(encoding="utf-8"))
+    assert "items" in content
+    assert content["code"] == "002594"
+    assert content["as_of"] == "2026-05-17"
+    assert isinstance(content["items"], list)

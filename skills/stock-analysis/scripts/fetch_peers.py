@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from lib.akshare_cache import cached_call
-from lib.module_io import write_module_data
+from lib.module_io import write_module_data, get_latest_ymd
 from lib.peer_finder import find_peers
 from fetch_chain import _extract_meta, _extract_quote
 
@@ -45,17 +45,24 @@ def fetch(
     if akshare_module is None:
         import akshare as akshare_module
 
-    # 先看 <today>/peers.txt 是否已存在（同日重跑），其次看 latest 的 peers.txt（保持可比性）
+    # 先看 <today>/peers.txt 是否已存在（同日重跑），其次看 latest 的 peers.txt（保持可比性 R9）
     today_peers_txt = stock_dir / MODULE_NAME / today / "peers.txt"
     peer_codes: list[str] = []
     if today_peers_txt.exists():
         peer_codes = [line.strip() for line in today_peers_txt.read_text(encoding="utf-8").splitlines() if line.strip()]
     else:
-        self_basic = _fetch_basic(code, stock_dir, today, akshare_module)
-        if name and "name" not in self_basic["meta"]:
-            self_basic["meta"]["name"] = name
-        industry = self_basic["meta"].get("industry") or ""
-        peer_codes = find_peers(code, industry, count=peers_count, akshare_module=akshare_module)
+        # R9: fall back to latest/peers.txt for comparability
+        latest_ymd = get_latest_ymd(stock_dir, MODULE_NAME)
+        if latest_ymd:
+            legacy_txt = stock_dir / MODULE_NAME / latest_ymd / "peers.txt"
+            if legacy_txt.exists():
+                peer_codes = [line.strip() for line in legacy_txt.read_text(encoding="utf-8").splitlines() if line.strip()]
+        if not peer_codes:
+            self_basic = _fetch_basic(code, stock_dir, today, akshare_module)
+            if name and "name" not in self_basic["meta"]:
+                self_basic["meta"]["name"] = name
+            industry = self_basic["meta"].get("industry") or ""
+            peer_codes = find_peers(code, industry, count=peers_count, akshare_module=akshare_module)
 
     self_data = _fetch_basic(code, stock_dir, today, akshare_module)
     if name and "name" not in self_data["meta"]:

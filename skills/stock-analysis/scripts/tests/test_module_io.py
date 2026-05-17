@@ -60,6 +60,15 @@ def test_get_latest_ymd_returns_none_when_missing(tmp_path):
     assert get_latest_ymd(tmp_path, "chain") is None
 
 
+def test_get_latest_ymd_returns_none_for_dangling_symlink(tmp_path):
+    """指向已删除目录的软链应返回 None。"""
+    import shutil
+    write_module_data(tmp_path, "chain", "2026-05-17", {})
+    # 删除目标目录但保留软链
+    shutil.rmtree(tmp_path / "chain" / "2026-05-17")
+    assert get_latest_ymd(tmp_path, "chain") is None
+
+
 def test_update_latest_symlink_idempotent(tmp_path):
     module_dir = tmp_path / "chain"
     (module_dir / "2026-05-17").mkdir(parents=True)

@@ -79,7 +79,12 @@ def fetch(code: str, name: str, stock_dir: Path, today: str, *, akshare_module=N
     for i, it in enumerate(anomalies, 1):
         it.setdefault("id", f"A{i:03d}")
     (ymd_dir / "anomalies.json").write_text(
-        json.dumps({"anomalies": anomalies}, ensure_ascii=False, indent=2),
+        json.dumps({
+            "$schema": "anomalies-v1",
+            "as_of": today,
+            "code": code,
+            "items": anomalies,
+        }, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (ymd_dir / "anomalies.md").write_text(

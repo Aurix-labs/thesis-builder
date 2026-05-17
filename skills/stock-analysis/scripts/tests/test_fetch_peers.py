@@ -52,3 +52,19 @@ def test_fetch_reuses_peers_txt_on_second_call(tmp_path):
     data = fetch("002594", "比亚迪", tmp_path, "2026-05-17", akshare_module=FakeAk(), peers_count=5)
     codes = [p["code"] for p in data["peers"]]
     assert "999999" in codes
+
+
+def test_fetch_peers_reuses_latest_peers_txt_on_new_day(tmp_path):
+    """R9: 新一天 --force 时应复用 latest/peers.txt，不重新选股。"""
+    # 第一天：常规创建
+    fetch("002594", "比亚迪", tmp_path, "2026-04-30", akshare_module=FakeAk(), peers_count=5)
+    # 人工改 latest 的 peers.txt 为一个特殊代码
+    (tmp_path / "peers" / "2026-04-30" / "peers.txt").write_text("888888\n", encoding="utf-8")
+
+    # 第二天 (今天)：应该复用 latest 而不是 find_peers 重选
+    data = fetch("002594", "比亚迪", tmp_path, "2026-05-17", akshare_module=FakeAk(), peers_count=5)
+    codes = [p["code"] for p in data["peers"]]
+    assert "888888" in codes  # 来自 latest/peers.txt 而非 find_peers
+    # 新 ymd 目录的 peers.txt 应该写入同样的列表（持久化复用结果）
+    new_txt = (tmp_path / "peers" / "2026-05-17" / "peers.txt").read_text(encoding="utf-8")
+    assert "888888" in new_txt

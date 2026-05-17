@@ -33,12 +33,13 @@ def read_module_data(stock_dir: Path, module: str, ymd: str | None = None) -> di
 
 
 def get_latest_ymd(stock_dir: Path, module: str) -> str | None:
-    """返回 latest 软链指向的 ymd 字符串，不存在返回 None。"""
+    """返回 latest 软链指向的 ymd 字符串；若软链不存在或指向已删除目录，返回 None。"""
     latest = stock_dir / module / "latest"
-    if not latest.is_symlink() and not latest.exists():
+    if not latest.is_symlink():
         return None
-    target = latest.readlink() if latest.is_symlink() else None
-    if target is None:
+    target = latest.readlink()
+    target_abs = (latest.parent / target) if not target.is_absolute() else target
+    if not target_abs.exists():
         return None
     return target.name
 
