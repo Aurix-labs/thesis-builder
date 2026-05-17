@@ -329,3 +329,22 @@ def test_error_output_format_three_section():
         assert 'actual:' in result.stdout
         assert 'fix:' in result.stdout
         assert result.returncode == 1  # FAIL
+
+
+def test_verify_facts_module_mode(tmp_path):
+    """--module valuation 应只校验 valuation/<ymd>/{data.json,report.md}。"""
+    from verify_facts import main as verify_main
+    import json
+
+    val_dir = tmp_path / "valuation" / "2026-05-17"
+    val_dir.mkdir(parents=True)
+    (val_dir / "data.json").write_text(json.dumps({
+        "module": "valuation", "ymd": "2026-05-17",
+        "quote": {"price": 280.5}
+    }, ensure_ascii=False), encoding="utf-8")
+    (val_dir / "report.md").write_text(
+        "## 标的速写\n现价：280.5 元 [F: quote.price]\n", encoding="utf-8")
+
+    # 跑 verify --module valuation --stock-dir <tmp>
+    rc = verify_main(["--module", "valuation", "--stock-dir", str(tmp_path), "--ymd", "2026-05-17"])
+    assert rc == 0

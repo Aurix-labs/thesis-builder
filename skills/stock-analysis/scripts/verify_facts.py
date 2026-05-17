@@ -245,18 +245,8 @@ def check_anomaly_coverage(anomalies: dict, md: str) -> list[dict]:
     return out
 
 
-def main() -> int:
-    p = argparse.ArgumentParser()
-    p.add_argument("--report", required=True)
-    p.add_argument("--data", required=True)
-    p.add_argument("--anomalies", required=False, default=None)
-    p.add_argument("--mode", choices=["partial", "full"], default="full")
-    args = p.parse_args()
-
-    md_text = Path(args.report).read_text()
-    data = json.loads(Path(args.data).read_text())
-    anomalies = json.loads(Path(args.anomalies).read_text()) if args.anomalies else {"items": []}
-
+def run_verify_core(md_text: str, data: Any, anomalies: dict, mode: str) -> int:
+    """核心校验流程：解析标签 → 各类 check → 打印三段式输出 → 返回 rc。"""
     tags = extract_tags(md_text)
     fails, warns = [], []
 
@@ -269,10 +259,10 @@ def main() -> int:
         if r:
             (warns if r['kind'] == 'WARN' else fails).append(r)
 
-    if args.mode == 'full' and anomalies['items']:
+    if mode == 'full' and anomalies.get('items'):
         fails += check_anomaly_coverage(anomalies, md_text)
 
-    print(f"=== verify_facts · {args.mode} · {len(tags)} tags ===")
+    print(f"=== verify_facts · {mode} · {len(tags)} tags ===")
     for r in fails + warns:
         print(f"[{r['kind']}] L{r['line']} {r['tag']}")
         # v3.2 三段式：尽量从 reason 中提取 expected/actual
@@ -289,6 +279,59 @@ def main() -> int:
         print(f"  fix:      {r['fix']}")
     print(f"\n[PASS] {len(tags) - len(fails) - len(warns)} / [FAIL] {len(fails)} / [WARN] {len(warns)}")
     return 1 if fails else (2 if warns else 0)
+
+
+def run_verify_single(data_path: Path, report_path: Path, mode: str = "partial") -> int:
+    """v4.0 单模块校验入口：直接给 (data.json, report.md) 路径，跑 partial 模式。"""
+    md_text = report_path.read_text(encoding="utf-8")
+    data = json.loads(data_path.read_text(encoding="utf-8"))
+    return run_verify_core(md_text, data, {"items": []}, mode)
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser()
+    # v3.2 全局路径
+    p.add_argument("--report", required=False, default=None)
+    p.add_argument("--data", required=False, default=None)
+    p.add_argument("--anomalies", required=False, default=None)
+    p.add_argument("--mode", choices=["partial", "full"], default="full")
+    # v4.0 单模块路径
+    p.add_argument("--module", help="只校验指定模块（如 valuation）", default=None)
+    p.add_argument("--stock-dir", help="股票输出目录（与 --module 配合）", default=None)
+    p.add_argument("--ymd", help="校验指定 ymd 的快照（默认 latest）", default=None)
+    args = p.parse_args(argv)
+
+    # v4.0 分支：--module 单模块校验
+    if args.module:
+        if not args.stock_dir:
+            print("ERROR: --module 模式需要 --stock-dir", file=sys.stderr)
+            return 1
+        stock_dir = Path(args.stock_dir)
+        if args.ymd:
+            ymd = args.ymd
+        else:
+            latest = stock_dir / args.module / "latest"
+            try:
+                ymd = Path(latest.readlink() if latest.is_symlink() else latest).name
+            except OSError as e:
+                print(f"ERROR: 无法解析 {latest}: {e}", file=sys.stderr)
+                return 1
+        module_dir = stock_dir / args.module / ymd
+        data_path = module_dir / "data.json"
+        report_path = module_dir / "report.md"
+        if not data_path.exists() or not report_path.exists():
+            print(f"ERROR: {module_dir} 下缺少 data.json 或 report.md", file=sys.stderr)
+            return 1
+        return run_verify_single(data_path, report_path, mode="partial")
+
+    # v3.2 原有路径
+    if not args.report or not args.data:
+        print("ERROR: 需要 --report 和 --data（或使用 --module 模式）", file=sys.stderr)
+        return 1
+    md_text = Path(args.report).read_text()
+    data = json.loads(Path(args.data).read_text())
+    anomalies = json.loads(Path(args.anomalies).read_text()) if args.anomalies else {"items": []}
+    return run_verify_core(md_text, data, anomalies, args.mode)
 
 
 if __name__ == "__main__":
