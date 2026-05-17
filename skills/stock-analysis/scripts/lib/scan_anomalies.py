@@ -148,6 +148,30 @@ def scan_price(kline: list[list], code_market_cap: float) -> list[dict]:
     return []
 
 
+def render_md(items: list[dict], code: str = "?", as_of: str = "?") -> str:
+    """渲染 anomalies 为 markdown（CRITICAL → HIGH → MEDIUM 排序）。"""
+    md = [f"# anomalies · {code} · {as_of}", ""]
+    for sev in ["CRITICAL", "HIGH", "MEDIUM"]:
+        sev_items = [x for x in items if x["severity"] == sev]
+        if not sev_items:
+            continue
+        if sev == "CRITICAL":
+            md.append("## CRITICAL（必须在 Step 0.5 整段讨论）")
+        elif sev == "HIGH":
+            md.append("## HIGH（必须在 Step 0.5 列出）")
+        else:
+            md.append("## MEDIUM（自决讨论）")
+        md.append("")
+        for it in sev_items:
+            md.append(f"### {it['id']} · {it['indicator']} {it['period']} · {it['narrative_hint']}")
+            md.append(f"- 当前：{it['value_display']} `[F:{it['blocks_ref']}]`")
+            if it.get("prior_value") is not None:
+                md.append(f"- 上年同期：{it['prior_value']/1e8:.3f}亿")
+            md.append(f"- 必须讨论 Step：{', '.join(it['must_address_in_step'])}")
+            md.append("")
+    return "\n".join(md)
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--data", required=True)
@@ -177,26 +201,8 @@ def main() -> int:
     }
     Path(args.out_json).write_text(json.dumps(out_obj, ensure_ascii=False, indent=2))
 
-    md = [f"# anomalies · {out_obj['code']} · {out_obj['as_of']}", ""]
-    for sev in ["CRITICAL", "HIGH", "MEDIUM"]:
-        sev_items = [x for x in items if x["severity"] == sev]
-        if not sev_items:
-            continue
-        if sev == "CRITICAL":
-            md.append(f"## CRITICAL（必须在 Step 0.5 整段讨论）")
-        elif sev == "HIGH":
-            md.append(f"## HIGH（必须在 Step 0.5 列出）")
-        else:
-            md.append(f"## MEDIUM（自决讨论）")
-        md.append("")
-        for it in sev_items:
-            md.append(f"### {it['id']} · {it['indicator']} {it['period']} · {it['narrative_hint']}")
-            md.append(f"- 当前：{it['value_display']} `[F:{it['blocks_ref']}]`")
-            if it.get("prior_value") is not None:
-                md.append(f"- 上年同期：{it['prior_value']/1e8:.3f}亿")
-            md.append(f"- 必须讨论 Step：{', '.join(it['must_address_in_step'])}")
-            md.append("")
-    Path(args.out_md).write_text("\n".join(md))
+    md = render_md(items, code=out_obj["code"], as_of=out_obj["as_of"])
+    Path(args.out_md).write_text(md)
 
     print(f"[OK] {len(items)} anomalies, {sum(1 for x in items if x['severity']=='CRITICAL')} CRITICAL")
     return 0
