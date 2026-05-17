@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 FIXTURES = Path(__file__).parent / 'fixtures'
-SCRIPT = Path(__file__).parent.parent / 'scan_anomalies.py'
+SCRIPT = Path(__file__).parent.parent / 'lib' / 'scan_anomalies.py'
 
 
 def test_detects_critical_q1_drop(tmp_path):
