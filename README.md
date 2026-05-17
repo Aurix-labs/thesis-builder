@@ -36,31 +36,71 @@ cp -r thesis-builder/skills/stock-analysis ~/.claude/skills/
 
 ## 当前 Skills
 
-### stock-analysis · v1.0
+### stock-analysis · v4.0（模块化）
 
-A 股个股深度研究系统，按买方/卖方研究员工作流的 Step 0-8 框架，生成可视化 HTML 研究报告。
+A 股个股深度研究系统，原始 Step 0-8 框架拆为 **7 个独立分析模块 + 1 个合成层**，每个模块按内容变化频率独立 TTL 复用快照，让用户按需调用单一维度而不必每次跑全套。
+
+**模块清单：**
+
+| 模块 | 主名 | 内容 | TTL |
+|---|---|---|---|
+| 产业链与趋势 | `chain` | 宏观周期 + 产业链拆解 + 趋势三要素 | 90 天 |
+| 公司质地 | `rubric` | Rubric 100 分评分 + 不碰清单 | 90 天 |
+| 业绩弹性 | `elasticity` | 弹性树 + 价格敏感度 + 悲观/基准/乐观 | 90 天 |
+| 风险与止损 | `risk` | 风险清单 + 异常分析 + 逻辑破坏条件 | 30 天 |
+| 估值与赔率 | `valuation` | 估值方法 + 三档目标价 + 盈亏比 | 7 天 |
+| 资金与技术面 | `flow-tech` | 筹码/资金流 + K 线 6 维（位置/趋势/量价/MACD/RSI/KDJ） | 1 天 |
+| 同业对标 | `peers` | 同业自动选股 + 5 维对比表 | 90 天 |
+| 合成报告 | `report` | Step 0 + Step 8 + bear-case + fact-check + HTML | — |
 
 **使用：**
-```
+
+```bash
+# 全景研究报告（默认）
 分析 002594
 看下比亚迪
+
+# 单模块调用（节省 token，TTL 内自动复用快照）
+002594 估值多少
+比亚迪技术面怎么样
+002594 的产业链
+比亚迪 质地和风险
+
+# 强制刷新（覆盖 TTL）
+重新跑下 002594 的估值
 ```
 
-**输出：** `output/<股票名>_<代码>/<YYYY-MM-DD>/{data.json, report.md, report.html}`
+**输出：**
 
-**特性：**
-- 三层架构：确定性数据采集（Python akshare）+ AI 深度推理（Step 0-8）+ AI 手写 HTML（分批 + 自检脚本）
-- 双评分体系：公司质地评分（6 维）vs. 综合交易评分（5 维）
-- Linear Terminal+ 设计语言（近黑 + lavender 单点缀 + Mono 数据）
-- 时间维度归档：按日期目录组织，`latest` 软链指向最新
+```
+output/<股票名>_<代码>/
+├── chain/<ymd>/{data.json, report.md}        + latest 软链
+├── rubric/<ymd>/{data.json, report.md}       + latest
+├── elasticity/<ymd>/{data.json, report.md}   + latest
+├── risk/<ymd>/{data.json, report.md, anomalies.md, anomalies.json}  + latest
+├── valuation/<ymd>/{data.json, report.md}    + latest
+├── flow-tech/<ymd>/{data.json, report.md}    + latest
+├── peers/<ymd>/{data.json, report.md, peers.txt}  + latest
+└── report/<ymd>/{report.md, fact-check.md, report.html, manifest.json}
+```
 
-**详见：** [skills/stock-analysis/SKILL.md](skills/stock-analysis/SKILL.md)
+单模块只出 markdown；合成 `report` 才生成 HTML（每次新跑，引用各模块最新快照）。
+
+**核心特性：**
+
+- **模块化拆分** —— 用户可按需调用单一维度（如只跑估值），不必每次跑完整流程
+- **TTL 复用** —— 各模块按内容变化频率独立设 TTL，TTL 内强制复用快照不重新拉数据、不重新跑 LLM 分析
+- **强解耦** —— 模块间分析输出彼此不引用；删除任一模块的目录不影响其他模块
+- **脚本管事实 + agent 管推理** —— 数据采集与文件操作走 Python（可测试），分析写作由 agent 按 references/modules/<m>.md 完成
+- **Linear Terminal+ 设计语言** —— 近黑 + lavender 单点缀 + Mono 数据，仅在合成 HTML 时启用
+
+**详见：** [skills/stock-analysis/SKILL.md](skills/stock-analysis/SKILL.md)、[skills/stock-analysis/config.yaml](skills/stock-analysis/config.yaml)（用户可编辑 TTL / 别名）
 
 ---
 
 ## 研究哲学
 
-stock-analysis 跟"另一个 AI 股票分析"的差异在七条研究原则与三条底线。这些原则在 Phase 2 执行 Step 0-8 时被显式约束（见 [references/analysis-framework.md §一](skills/stock-analysis/references/analysis-framework.md)）。
+stock-analysis 跟"另一个 AI 股票分析"的差异在七条研究原则与三条底线。这些原则在各模块的方法论文件中被显式约束（见 [skills/stock-analysis/references/modules/](skills/stock-analysis/references/modules/)）。
 
 ### 七条原则
 
@@ -117,7 +157,7 @@ thesis-builder/
 │       └── plans/        # 实施计划
 ├── mockups/              # 设计稿
 └── skills/
-    └── stock-analysis/   # v1.0
+    └── stock-analysis/   # v4.0
 ```
 
 ---
