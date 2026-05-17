@@ -1,138 +1,56 @@
-# data.json Schema
+# data.json Schema · v4.0 模块化
 
-Phase 1 输出的 `output/<股票名>_<代码>/<YYYY-MM-DD>/data.json` 的结构。
-Phase 2/3 的 AI 读取此 JSON 提取所需数据。
+每个模块的 `<stock>/<module>/<ymd>/data.json` 是该模块独立的字段集合。
 
-## 顶层字段
-
-```json
-{
-  "meta": { ... },
-  "quote": { ... },
-  "kline_daily": [ ... ],
-  "financials": [ ... ],
-  "business_segments": [ ... ],
-  "top_holders": [ ... ],
-  "news": [ ... ],
-  "blocks": { ... }
-}
-```
-
-## meta
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| code | string | ✓ | 6 位 A 股代码（"002594"） |
-| name | string | ✓ | 公司中文简称（"比亚迪"） |
-| exchange | string | ✓ | "SH" / "SZ" / "BJ" |
-| industry | string | – | 申万一级行业 |
-| as_of | string | ✓ | 数据截止日 YYYY-MM-DD |
-| source | string | ✓ | "akshare" / "mcp" / "manual" |
-
-## quote
+通用顶层字段（所有模块都有）：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
-| price | number | 最新收盘价 |
-| change_pct | number | 当日涨跌幅 (-1.84 表示 -1.84%) |
-| market_cap | number | 总市值（元） |
-| pe | number | 滚动 PE |
-| pb | number | 最新 PB |
+|---|---|---|
+| `module` | string | 模块名（chain/rubric/...） |
+| `ymd` | string | 数据日 YYYY-MM-DD |
+| `meta` | object | 标的元信息（code/name/industry） |
+| `quote` | object | 行情快照（price/market_cap/pe/pb） |
 
-## kline_daily
+## chain
+`meta`、`quote`、`business_segments`、`news`
 
-数组，每行 `[date, open, close, low, high, volume]`。
+## rubric
+`meta`、`quote`、`financial_abstract`、`top_holders`、`margin`
 
-**OHLC 顺序约定：** `[open, close, low, high]`（与 ECharts candlestick series 默认一致）。
-**禁止：** OHLC 中改用 `[open, high, low, close]`。
+## elasticity
+`meta`、`quote`、`financial_abstract`、`business_segments`
 
-示例：
-```json
-[
-  ["2023-05-15", 215.30, 218.50, 214.00, 219.80, 12340000],
-  ["2023-05-16", 218.50, 220.10, 217.20, 221.50, 9870000]
-]
-```
+## risk
+`meta`、`quote`、`financial_abstract`、`kline_daily`（近 180 天）、`notice`、`news`
+额外产物：`anomalies.md` + `anomalies.json`
 
-最近 3 年 ≈ 730 行。
+## valuation
+`meta`、`quote`、`financial_abstract`、`research`、`recommend`、`kline_daily`（近 30 天）
 
-## financials
+## flow-tech
+`meta`、`quote`、`kline_daily`（近 365 天）、`top_holders`、`fund_flow`、`margin`
 
-每年一行：
-```json
-[
-  { "year": 2025, "revenue": 7771.0, "net_profit": 402.5, "gross_margin": 0.182, "roe": 0.241 },
-  { "year": 2024, "revenue": 6023.0, "net_profit": 300.4, "gross_margin": 0.180, "roe": 0.218 }
-]
-```
+## peers
+`self`（本公司）+ `peers`（同业列表，每项含 `code`/`meta`/`quote`/`financial_abstract`）
+额外产物：`peers.txt`（每行一个同业代码）
 
-数值单位：营收/净利润为亿元；毛利率/ROE 为小数（0.182 表示 18.2%）。
+## report（合成层）
+不直接拉数据。产物：`report.md`、`fact-check.md`、`report.html`、`manifest.json`（记录引用的各模块 ymd）
 
-## business_segments
+## meta 子结构
+| 字段 | 说明 |
+|---|---|
+| `code` | 6 位代码 |
+| `name` | 中文简称 |
+| `industry` | 行业（chain/rubric 等模块从 stock_individual_info_em 提取） |
 
-```json
-[
-  { "name": "汽车及电池", "revenue_share": 0.78, "gross_margin": 0.205 },
-  { "name": "手机部件", "revenue_share": 0.20, "gross_margin": 0.085 }
-]
-```
+## quote 子结构
+| 字段 | 说明 |
+|---|---|
+| `price` | 最新价 |
+| `market_cap` | 总市值（元） |
+| `pe` | 滚动 PE |
+| `pb` | 最新 PB |
 
-## top_holders
-
-```json
-[
-  { "rank": 1, "name": "比亚迪股份有限公司", "share_pct": 0.179, "shares": 521000000 }
-]
-```
-
-## news
-
-```json
-[
-  { "title": "比亚迪 4 月销量同比 +21%", "date": "2026-05-08", "source": "新浪财经", "url": "..." }
-]
-```
-
-## blocks（兼容旧版）
-
-原 `stock_full_report.py` 的 `blocks` 字段保留作为低级 raw 数据透传，供 agent 按需深挖。
-新代码应优先使用上面的标准字段。
-
-## anomalies.json schema (v3.1)
-
-```json
-{
-  "$schema": "anomalies-v1",
-  "as_of": "YYYY-MM-DD",
-  "code": "300775",
-  "items": [
-    {
-      "id": "A001",
-      "rule_id": "FIN-001",
-      "severity": "CRITICAL | HIGH | MEDIUM",
-      "indicator": "归母净利润",
-      "period": "2026Q1",
-      "value": 10737549.01,
-      "value_display": "0.107亿",
-      "prior_value": 128606786.31,
-      "prior_period": "2025Q1",
-      "delta_pct": -0.917,
-      "blocks_ref": "financial_abstract.20260331.归母净利润",
-      "must_address_in_step": ["0.5", "4", "5", "8"],
-      "narrative_hint": "..."
-    }
-  ]
-}
-```
-
-详细规则见 [anomaly-rules.md](anomaly-rules.md)。
-
-## data_inventory.md（v3.1，自动产出）
-
-非结构化 Markdown 报告，由 build_inventory.py 生成，包含：
-- Block 覆盖矩阵
-- 顶层字段健康度
-- Step 字段需求映射
-- 推荐补全清单
-
-agent 必读后方可进入 Phase 2。
+## kline_daily 子结构
+list[dict]，每行含 `日期`/`开盘`/`收盘`/`最高`/`最低`/`成交量`（akshare stock_zh_a_hist 原始字段）。
