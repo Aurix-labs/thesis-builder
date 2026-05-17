@@ -1,4 +1,7 @@
 """测试 build_inventory.py：读 data.json → 输出 data_inventory.md"""
+import pytest
+pytest.skip("v4 legacy", allow_module_level=True)
+
 import json
 import subprocess
 from pathlib import Path
