@@ -149,3 +149,41 @@
 
 副标：`<passed_items>/20 ✓` · 评级：{优秀/良好/一般/较差}
 ```
+
+## summary 必填字段（rubric/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "total": 72,
+    "passed": 14,
+    "dimensions": [
+      {"name": "基本面",     "points_max": 30, "points_got": 18},
+      {"name": "产业匹配",   "points_max": 20, "points_got": 16},
+      {"name": "业绩弹性",   "points_max": 20, "points_got": 14},
+      {"name": "估值与位置", "points_max": 15, "points_got": 10},
+      {"name": "资金交易",   "points_max": 10, "points_got": 9},
+      {"name": "治理风险",   "points_max": 5,  "points_got": 5}
+    ],
+    "financials_table": [
+      {"year": 2023, "revenue": 6023.15, "net_profit": 300.41, "gross_margin": 0.2034, "roe": 0.2103},
+      {"year": 2024, "revenue": 7773.34, "net_profit": 402.54, "gross_margin": 0.2188, "roe": 0.2245},
+      {"year": 2025, "revenue": 8500.00, "net_profit": 500.00, "gross_margin": 0.2250, "roe": 0.2350}
+    ],
+    "revenue_breakdown": [
+      {"name": "汽车", "value": 6700, "percent": 0.79}
+    ]
+  }
+}
+```
+
+**约束**：
+
+- `dimensions` 必须恰好 6 条（名称固定：基本面/产业匹配/业绩弹性/估值与位置/资金交易/治理风险）
+- `total = sum(d.points_got for d in dimensions)`（render_html.py 不校验加法，但报告内一致性由 verify_consistency.py 兜底）
+- `financials_table` 至少 3 行（最近 3 年），数字单位：营收/净利 = 亿元，gross_margin/roe = 0-1 小数（HTML 渲染时 × 100 显示百分比）
+- `revenue_breakdown` 至少 1 项，`value` 单位 = 亿元，`percent` = 0-1 小数
+
+报告中所有"X/100"、"X/20 ✓"、6 维评分条的数字必须与 `summary` 严格一致（散文/数据不一致由 fact-check 兜底）。
