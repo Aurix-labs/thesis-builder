@@ -87,9 +87,16 @@ def _walk(data: Any, path_parts: list[str], full_path: str) -> Any:
 
 
 def _check_type(value: Any, expected: type | tuple, path: str) -> None:
-    # bool 是 int 的子类，要单独处理避免误判
-    if expected is int and isinstance(value, bool):
-        raise RenderError(f"{path} 期望 int, 实际 bool")
+    # bool 是 int 的子类，对所有期望 int 或 (int, float) 的字段都要先排除 bool
+    if isinstance(value, bool):
+        numeric_expected = (
+            expected is int
+            or expected is float
+            or (isinstance(expected, tuple) and (int in expected or float in expected))
+        )
+        if numeric_expected:
+            exp_name = expected.__name__ if isinstance(expected, type) else "/".join(t.__name__ for t in expected)
+            raise RenderError(f"{path} 期望 {exp_name}, 实际 bool")
     if not isinstance(value, expected):
         actual = type(value).__name__
         exp_name = expected.__name__ if isinstance(expected, type) else "/".join(t.__name__ for t in expected)
@@ -132,5 +139,7 @@ def validate_schema(data: dict) -> None:
 
     任一失败抛 RenderError，错误信息精确到字段路径（含列表下标）。
     """
+    if not isinstance(data, dict):
+        raise RenderError(f"data.json 顶层不是 dict, 实际 {type(data).__name__}")
     for path, expected_type, extra in _SCHEMA:
         _validate_one(data, path, expected_type, extra)

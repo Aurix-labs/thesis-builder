@@ -132,3 +132,24 @@ def test_flow_tech_kline_too_short_raises():
     d["flow_tech"]["kline_daily"] = d["flow_tech"]["kline_daily"][:30]
     with pytest.raises(RenderError, match="flow_tech.kline_daily"):
         validate_schema(d)
+
+
+def test_missing_nested_field_in_list_item_raises():
+    """`*` fanout 应能在列表元素的缺字段时定位到 [i].field。"""
+    d = _minimal_valid_data()
+    del d["rubric"]["summary"]["dimensions"][2]["points_max"]
+    with pytest.raises(RenderError, match=r"rubric\.summary\.dimensions\[2\]\.points_max"):
+        validate_schema(d)
+
+
+def test_bool_rejected_for_numeric_tuple_field():
+    """bool 不能蒙混过 (int, float) 类型字段（True 是 int 子类）。"""
+    d = _minimal_valid_data()
+    d["rubric"]["summary"]["financials_table"][0]["revenue"] = True
+    with pytest.raises(RenderError, match=r"financials_table\[0\]\.revenue.*bool"):
+        validate_schema(d)
+
+
+def test_top_level_non_dict_raises():
+    with pytest.raises(RenderError, match="顶层不是 dict"):
+        validate_schema([])  # type: ignore
