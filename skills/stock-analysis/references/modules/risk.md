@@ -177,3 +177,21 @@ verify_facts.py 反查规则：
 2. 季度净利同比再下滑 > -30% [F:]
 3. 核心客户 / 大订单流失 [I:]
 ```
+
+## summary 必填字段（risk/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "level": "中"
+  }
+}
+```
+
+**约束**：
+
+- `level` 必须是 `"低" | "中" | "高" | "极高"` 之一
+- 判定原则：综合 5a 风险清单 + 5b 逻辑破坏条件 + anomalies.md 中 CRITICAL/HIGH 数量
+- 该字段被 HTML hero meta-row 直接渲染，与报告 5d 风险综合判断段必须一致
