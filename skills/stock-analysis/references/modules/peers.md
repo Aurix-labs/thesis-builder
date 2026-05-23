@@ -84,3 +84,25 @@
 2. 是否存在"青黄不接"的业绩真空期？
 3. 估值体系是否需要切换？
 ```
+
+## summary 必填字段（peers/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "list": [
+      {"code": "601127", "name": "赛力斯",     "highlight": "新势力对标"},
+      {"code": "300750", "name": "宁德时代",   "highlight": "电池横向对标"}
+    ]
+  }
+}
+```
+
+**约束**：
+
+- `list` 长度建议 2-4 条（HTML 对标卡可视密度）
+- `code` 必须 6 位 + 后缀（如 `601127.SH` 或纯 `601127`，render_html.py 不校验后缀）
+- `highlight` 简短，一句话说明对标价值
+- 同一只票多次研究应保持 `list` 稳定（与 R9 一致），避免对比漂移
