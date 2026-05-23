@@ -1,7 +1,7 @@
 ---
 name: stock-analysis
 description: |
-  A 股个股深度研究系统 v4.0（模块化）。**只要用户提到任何 A 股个股相关的研究/分析/决策需求，
+  A 股个股深度研究系统。**只要用户提到任何 A 股个股相关的研究/分析/决策需求，
   哪怕没有明说"分析"，也要主动调用本 skill**——包括但不限于：
     • 直接给出 6 位 A 股代码（000/001/002/300/301/600/601/603/605/688 开头）
     • 提到 A 股公司中文简称（"看下比亚迪"、"研究下宁德时代"、"宁王怎么样"）
@@ -19,7 +19,7 @@ metadata:
   argument-hint: <股票代码或公司名> [模块...] [--force]
 ---
 
-# stock-analysis · A 股个股深度研究系统 v4.0
+# stock-analysis · A 股个股深度研究系统
 
 ## 调用语法
 
@@ -62,7 +62,7 @@ metadata:
 
 | ID | 约束 | Why |
 |---|---|---|
-| R1 | TTL 内必须复用 latest 快照，不重新拉数据、不重新跑 LLM 分析 | 重新跑 LLM 写一遍模块 report.md 烧数万 token；用户明确说过"TTL 内有缓存就用缓存"。这是 v4.0 模块化的核心价值——不复用就退化成 v3.2 |
+| R1 | TTL 内必须复用 latest 快照，不重新拉数据、不重新跑 LLM 分析 | 重新跑 LLM 写一遍模块 report.md 烧数万 token；用户明确说过"TTL 内有缓存就用缓存"。模块化的核心价值在于复用，不复用就退化成单文件大报告。 |
 | R2 | `--force` 是打破 R1 的唯一方式 | 避免你"想做完整一点"就自作主张重跑。只有用户口头明确说"重新跑/刷新/强制更新"才能翻译成 `--force` |
 | R3 | 合成 `report` 时各模块独立应用 R1/R2 | 用户跑全景时如果 chain/rubric/peers 的 90 天快照还新鲜就该复用；只有过期模块重跑。这样长期使用合成成本会随时间收敛到接近 0 |
 | R4 | 单模块**永不**出 HTML；HTML 仅在合成 report 时产出 | HTML 生成成本极高（6 批分写 + verify_html.sh 兜底）。单模块快照随时会被 compose 重新合并到大 HTML，单独出 HTML 是纯浪费 |
@@ -132,9 +132,8 @@ output/
 | HTML 模板 | [templates/report.html.j2](templates/report.html.j2) |
 | HTML 渲染器 | [scripts/render_html.py](scripts/render_html.py) |
 | data.json schema | [references/data-schema.md](references/data-schema.md) |
-| v3.2 归档（仅参考） | [references/_legacy/](references/_legacy/) |
 
-## 禁止事项（v4 沿用 v3.2 + 新增）
+## 禁止事项
 
 | # | 禁止 | 原因 |
 |---|---|---|
@@ -146,5 +145,4 @@ output/
 | 6 | TTL 内未传 --force 就重新拉数据 | 违反 R1（用户已强约束） |
 | 7 | `compose_report.py` 之外的脚本调用合成层产物 | 合成是 agent 责任 |
 | 8 | 修改 latest 软链后不更新 manifest | 合成报告需可审计 |
-| 9 | ~~一次性写完整 HTML~~ | v5 起 HTML 由 render_html.py 一次产出，本条作废 |
-| 10 | hero meta 显示 A/B/C 字母评级 | v3.1 起改用 `Rubric: <total>/100` |
+| 9 | hero meta 显示 A/B/C 字母评级 | 改用 `Rubric: <total>/100` |
