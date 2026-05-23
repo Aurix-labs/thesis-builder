@@ -75,3 +75,190 @@ def test_raw_html_pass_through():
     out = MdRenderer().render(md)
     assert "<svg" in out
     assert "<rect" in out
+
+
+from lib.md_renderer import split_report_sections
+from lib.render_schema import RenderError
+import pytest
+
+
+_SAMPLE_MD = """<!-- THESIS_SNAPSHOT_START -->
+速写
+<!-- THESIS_SNAPSHOT_END -->
+
+## Step 0 · 任务锁定
+
+mission body.
+
+## Step 0.5 · 核心异常分析
+
+anomalies body.
+
+## Step 1 · 宏观与周期定位
+
+macro body.
+
+## Step 2 · 产业链
+
+### 2a. 题材来源
+
+ta.
+
+### 2b. 产业链图
+
+```mermaid
+flowchart LR
+  A --> B
+```
+
+### 2c. 业务线
+
+tc.
+
+## Step 3 · 公司质地评分
+
+### 3a. 正面筛选
+
+3a body.
+
+### 3b. 不碰清单
+
+3b body.
+
+### 3c. Rubric 评分
+
+3c skipped.
+
+### 3d. 治理
+
+3d body.
+
+## Step 4 · 业绩弹性测算
+
+### 4a. 弹性树
+
+skipped.
+
+### 4b. 价格敏感度
+
+4b body.
+
+### 4c. 情景分析
+
+4c body.
+
+## Step 5 · 风险分析
+
+risk body.
+
+## Step 6 · 估值
+
+### 6a. 估值方法
+
+6a body.
+
+### 6a+. 资金面
+
+6a+ body.
+
+### 6a++. 技术面
+
+6a++ body.
+
+### 6b. 期货
+
+6b body.
+
+### 6c. 研报对比
+
+6c body.
+
+### 6d. 三档目标价
+
+skipped.
+
+### 6e. 盈亏比
+
+6e body.
+
+### 6f. 框架原则
+
+6f body.
+
+## Step 7 · 对标分析
+
+compare body.
+
+## Step 8 · 跟踪计划
+
+tracking body.
+"""
+
+
+def test_split_returns_all_required_keys():
+    out = split_report_sections(_SAMPLE_MD)
+    required = {
+        "step_0", "step_0_5", "step_1", "step_2",
+        "step_3_pre", "step_3_post",
+        "step_4_post",
+        "step_5",
+        "step_6_pre", "step_6_post",
+        "step_7", "step_8",
+    }
+    assert required.issubset(set(out.keys()))
+
+
+def test_split_step_3_pre_contains_3a_3b_not_3c():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "3a body" in out["step_3_pre"]
+    assert "3b body" in out["step_3_pre"]
+    assert "3c skipped" not in out["step_3_pre"]
+    assert "3c skipped" not in out["step_3_post"]
+
+
+def test_split_step_3_post_contains_only_3d():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "3d body" in out["step_3_post"]
+    assert "3a body" not in out["step_3_post"]
+
+
+def test_split_step_4_post_contains_4b_4c_not_4a():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "4b body" in out["step_4_post"]
+    assert "4c body" in out["step_4_post"]
+    assert "skipped" not in out["step_4_post"]
+
+
+def test_split_step_6_pre_contains_6a_subs_not_6d():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "6a body" in out["step_6_pre"]
+    assert "6a+ body" in out["step_6_pre"]
+    assert "6a++ body" in out["step_6_pre"]
+    assert "6d" not in out["step_6_pre"]
+
+
+def test_split_step_6_post_contains_6e_onward_not_6d():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "6b body" in out["step_6_post"]
+    assert "6c body" in out["step_6_post"]
+    assert "6e body" in out["step_6_post"]
+    assert "6f body" in out["step_6_post"]
+    assert "skipped" not in out["step_6_post"]
+
+
+def test_split_step_2_keeps_mermaid_block():
+    out = split_report_sections(_SAMPLE_MD)
+    assert "```mermaid" in out["step_2"]
+    assert "flowchart LR" in out["step_2"]
+
+
+def test_split_missing_step_5_raises():
+    md = _SAMPLE_MD.replace("## Step 5 · 风险分析\n\nrisk body.\n\n", "")
+    with pytest.raises(RenderError, match="Step 5"):
+        split_report_sections(md)
+
+
+def test_split_missing_step_3_subheading_4b_raises():
+    md = _SAMPLE_MD.replace("### 4b. 价格敏感度\n\n4b body.\n\n", "")
+    with pytest.raises(RenderError, match="Step 4.*4b"):
+        split_report_sections(md)
