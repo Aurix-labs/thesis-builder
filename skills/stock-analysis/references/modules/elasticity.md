@@ -103,3 +103,27 @@
 
 > 三档 EPS / 净利数据必须与 valuation 模块目标价输入保持一致
 ```
+
+## summary 必填字段（elasticity/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "tree_children": [
+      {"name": "整车销量",   "ratio": "55%", "margin": "20%", "factor": "1.8x", "is_core": true},
+      {"name": "电池外供",   "ratio": "12%", "margin": "15%", "factor": "1.2x", "is_core": false},
+      {"name": "电子组装",   "ratio": "8%",  "margin": "8%",  "factor": "0.5x", "is_core": false}
+    ]
+  }
+}
+```
+
+**约束**：
+
+- `tree_children` ≥ 1 条，建议 3-4 条（HTML 卡片可视密度限制）
+- `is_core=true` 的项**至多 1 条**（HTML 用 lavender 边框突出，多个 core 会失去强调）
+- `ratio` / `margin` / `factor` 是字符串（保留 LLM 表达的精度后缀，例如 "55%"、"1.8x"、"20%-25%"）
+
+**4a ASCII 树**保留在 report.md 里作深度阅读用，HTML 只渲染上述简化形态（这是与 v4 一致的现有 HTML 行为）。
