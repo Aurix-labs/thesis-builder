@@ -4,6 +4,11 @@
 > Phase 3 开始时 agent 必读本文，所有 CSS class 来自 [../templates/template_base.css](../templates/template_base.css)。
 > 分批校验清单见 [./batch-checklist.md](./batch-checklist.md)。
 
+> **v5 更新**：HTML 不再由 agent 手写。所有 CSS class、HTML 结构、partials 由
+> [`templates/report.html.j2`](../templates/report.html.j2) 渲染。本文件保留作为**设计规范来源**：
+> 改样式时改 `templates/template_base.css` + 对应 partial，跑 `pytest scripts/tests/test_render_html.py`，
+> 视觉对比 `examples/比亚迪_002594.html` 金样本。无需再读分批 grep 清单。
+
 ---
 
 ## 1. 设计语言锚定
