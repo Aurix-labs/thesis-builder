@@ -109,3 +109,16 @@ def test_render_dry_run_does_not_write(tmp_path):
     out = render(report_dir.parent.parent, "2026-05-15", fixed_meta=FIXED_META, dry_run=True)
     assert out is None
     assert not (report_dir / "report.html").exists()
+
+
+def test_render_byte_matches_golden(tmp_path):
+    """金样本回归：用 examples/比亚迪_002594_input/ 渲染，与 examples/比亚迪_002594.html 字节一致。"""
+    report_dir = _copy_golden_to_tmp(tmp_path)
+    html_path = render(report_dir.parent.parent, "2026-05-15", fixed_meta=FIXED_META)
+    actual = html_path.read_text(encoding="utf-8")
+    golden = (SKILL_ROOT / "examples" / "比亚迪_002594.html").read_text(encoding="utf-8")
+    assert actual == golden, (
+        f"render_html.py 输出与金样本不一致。\n"
+        f"如确属预期变更，更新 examples/比亚迪_002594.html 并 commit。\n"
+        f"actual 长度={len(actual)}, golden 长度={len(golden)}"
+    )

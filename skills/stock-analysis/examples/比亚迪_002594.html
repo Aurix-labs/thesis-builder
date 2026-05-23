@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="data-as-of" content="2026-05-15">
-<title>比亚迪 002594 · 深度研究 · 2026-05-15</title>
+<title>比亚迪 002594.SZ · 深度研究 · 2026-05-15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
-
-<!-- ANCHOR:head-style -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
 /* =============================================================
    stock-analysis · template_base.css
@@ -451,18 +450,6 @@ footer {
 footer p { color: var(--ink-tertiary); margin-bottom: 6px; max-width: none; }
 footer strong { color: var(--ink-tertiary); font-weight: 400; }
 
-/* ------------------ v3.1 inline tag spans ------------------ */
-.tag-f, .tag-c, .tag-i, .tag-t, .tag-gap {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-tertiary);
-  margin-left: 4px;
-  opacity: 0.7;
-}
-.tag-f { color: var(--accent); }
-.tag-c { color: var(--accent-hover); }
-.tag-gap { color: var(--semantic-warn); }
-
 /* ------------------ Warnings ------------------ */
 .data-stale-warn {
   background: rgba(94, 106, 210, 0.08);
@@ -476,15 +463,15 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
 }
 .data-stale-warn::before { content: '⚠ '; color: var(--accent); }
 
+/* ------------------ Bear Case section (v3.1) ------------------ */
+#bear-case .section-eyebrow { color: var(--semantic-down); }
+#bear-case .section-eyebrow::before { content: '// '; opacity: 0.6; }
+#bear-case { border-left: 2px solid var(--semantic-down); padding-left: 28px; }
 </style>
 </head>
-
-<!-- ANCHOR:body-start -->
 <body>
-
-<!-- ANCHOR:nav -->
 <nav class="top-nav">
-  <div class="left"><span class="status-dot"></span>DEEP RESEARCH · v3 · ACTIVE</div>
+  <div class="left"><span class="status-dot"></span>DEEP RESEARCH · v5 · ACTIVE</div>
   <div class="nav-links">
     <a href="#hero">行情</a>
     <a href="#conclusion-top">结论</a>
@@ -506,59 +493,105 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
 
 <div class="container">
 
-  <!-- ANCHOR:compliance-banner -->
-  <div class="compliance-banner">本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</div>
+  <div class="compliance-banner">[RESEARCH ONLY] 本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</div>
 
-  <!-- ANCHOR:hero -->
   <section class="hero" id="hero">
     <div>
       <h1 class="ticker">比亚迪<span class="code">002594.SZ</span></h1>
-      <p class="lead">一家在新能源整车规模化与电池外供放量之间寻找平衡的产业链龙头，2026 出海与海洋系列将决定下一段曲线。</p>
+      <p class="lead">新能源整车规模化 + 电池外供放量的双轮模型</p>
     </div>
     <div class="hero-spark">
       <div class="lbl">D-T-D / 24H</div>
-      <div class="pct down">-1.84%</div>
-      <svg width="220" height="50" viewBox="0 0 220 50">
-        <defs><linearGradient id="g1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ff5a5f" stop-opacity="0.4"/><stop offset="1" stop-color="#ff5a5f" stop-opacity="0"/></linearGradient></defs>
-        <polyline points="0,30 14,28 28,32 42,26 56,20 70,24 84,18 98,14 112,20 126,28 140,32 154,28 168,34 182,38 196,32 210,40 220,44" stroke="#ff5a5f" stroke-width="1.5" fill="none"/>
-        <polyline points="0,30 14,28 28,32 42,26 56,20 70,24 84,18 98,14 112,20 126,28 140,32 154,28 168,34 182,38 196,32 210,40 220,44 220,50 0,50" fill="url(#g1)" stroke="none"/>
-      </svg>
+      <div class="pct up">+1.89%</div>
+      
+
+
+
+
+
+<svg width="220" height="50" viewBox="0 0 220 50">
+  <defs><linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+    <stop offset="0" stop-color="#27a644" stop-opacity="0.4"/>
+    <stop offset="1" stop-color="#27a644" stop-opacity="0"/>
+  </linearGradient></defs>
+  <polyline points="0,38 8,45 15,41 23,34 30,23 38,34 46,41 53,38 61,30 68,20 76,30 83,38 91,34 99,27 106,16 114,27 121,34 129,30 137,23 144,12 152,23 159,30 167,27 174,20 182,9 190,20 197,27 205,23 212,16 220,5" stroke="#27a644" stroke-width="1.5" fill="none"/>
+  <polyline points="0,38 8,45 15,41 23,34 30,23 38,34 46,41 53,38 61,30 68,20 76,30 83,38 91,34 99,27 106,16 114,27 121,34 129,30 137,23 144,12 152,23 159,30 167,27 174,20 182,9 190,20 197,27 205,23 212,16 220,5 220,50 0,50" fill="url(#g1)" stroke="none"/>
+</svg>
     </div>
   </section>
 
-  <!-- Meta Row -->
   <div class="meta-row">
-    <div class="hero-meta-item"><div class="k">Rubric</div><div class="v">72/100</div><div class="sub">14/20 ✓</div></div>
-    <div class="hero-meta-item"><div class="k">Target / mid</div><div class="v target-mid">¥290.00</div><div class="sub">+15.9% upside</div></div>
-    <div class="hero-meta-item"><div class="k">R / R</div><div class="v">2.8</div><div class="sub">¥230 ↔ ¥290 ↔ ¥350</div></div>
-    <div class="hero-meta-item"><div class="k">Risk</div><div class="v">MED</div><div class="sub">3 hard-stops</div></div>
+  <div class="hero-meta-item">
+    <div class="k">Rubric</div>
+    <div class="v">72/100</div>
+    <div class="sub">14/20 ✓</div>
   </div>
+  <div class="hero-meta-item">
+    <div class="k">Target / mid</div>
+    <div class="v target-mid">¥290.00</div>
+    <div class="sub">+15.9% upside</div>
+  </div>
+  <div class="hero-meta-item">
+    <div class="k">R / R</div>
+    <div class="v">2.8</div>
+    <div class="sub">¥230 ↔ ¥290 ↔ ¥350</div>
+  </div>
+  <div class="hero-meta-item">
+    <div class="k">Risk</div>
+    <div class="v">中</div>
+    <div class="sub">见 #risk 卡</div>
+  </div>
+</div>
 
-  <!-- ANCHOR:conclusion-top -->
   <section class="card" id="conclusion-top">
     <div class="section-eyebrow">core thesis</div>
     <h2>新能源整车规模化 + 电池外供放量的双轮模型</h2>
-    <p>2026 海外销量加速 + 海洋系列高端化，<strong>预计 EPS 同比 +24%</strong>。短期受锂价反弹与欧洲反补贴扰动，给左侧建仓窗口；中期目标价对应 PE 22x，与 2024 全球可比均值相当。</p>
+    <table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标的</td>
+<td>比亚迪（002594.SZ）</td>
+</tr>
+<tr>
+<td>周期</td>
+<td>中线 1-2 季</td>
+</tr>
+<tr>
+<td>数据截止日</td>
+<td>2026-05-15</td>
+</tr>
+<tr>
+<td>研究状态</td>
+<td>持续跟踪</td>
+</tr>
+<tr>
+<td>风格预判</td>
+<td>配置型</td>
+</tr>
+</tbody>
+</table>
+
   </section>
 
-  <!-- ANCHOR:profile-grid -->
   <div class="grid-2" id="profile">
     <div class="card">
       <div class="section-eyebrow">company profile</div>
       <h3>公司画像</h3>
-      <p>2025 全球新能源乘用车销量榜首，整车 + 电池 + 半导体一体化。覆盖 100% 自有电池供应，外供占比 12%。</p>
-      <p class="mono" style="color:var(--ink-tertiary);font-size:12px;margin-top:12px;">SZ · 深圳 · 国有控股 · 申万一级：汽车</p>
+      <p>比亚迪（002594.SZ）—— 见任务卡。</p>
     </div>
     <div class="card">
       <div class="section-eyebrow">recent news</div>
       <h3>近期动态</h3>
-      <p style="font-size:13px;">· 2026-05-08 比亚迪 4 月销量同比 +21% <span class="tag-i">[I:乘联会·4月汽车销量月报]</span>（新浪财经）</p>
-      <p style="font-size:13px;">· 2026-05-03 海洋系列旗舰上市，售价 33.98 万起</p>
-      <p style="font-size:13px;">· 2026-04-22 一季报：营收 +18% / 净利 +33%</p>
+      
     </div>
   </div>
 
-  <!-- ANCHOR:financial-grid -->
   <div class="grid-2" id="financial">
     <div class="card">
       <div class="section-eyebrow">business segments</div>
@@ -567,297 +600,617 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
     </div>
     <div class="card">
       <div class="section-eyebrow">financials</div>
-      <h3>关键财务指标</h3>
-      <div class="data-grid">
-        <div class="grid-head"><div>指标</div><div>FY25</div><div>FY24</div><div>FY23</div></div>
-        <div class="grid-row"><div>营收（亿）</div><div>7771 <span class="tag-f">[F:financials.2025.revenue]</span></div><div>6023</div><div>4241</div></div>
-        <div class="grid-row"><div>净利润（亿）</div><div>402.5 <span class="tag-f">[F:financials.2025.net_profit]</span></div><div>300.4</div><div>166.2</div></div>
-        <div class="grid-row"><div>毛利率</div><div>18.2%</div><div>18.0%</div><div>16.8%</div></div>
-        <div class="grid-row"><div>ROE</div><div class="pos">24.1%</div><div>21.8%</div><div>15.4%</div></div>
-      </div>
+      <h3>核心财务</h3>
+      <table class="financial-table">
+  <thead>
+    <tr><th>年份</th><th>营收（亿）</th><th>归母（亿）</th><th>毛利率</th><th>ROE</th></tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      <td>2023</td>
+      <td>6023.15</td>
+      <td>300.41</td>
+      <td>20.34%</td>
+      <td>21.03%</td>
+    </tr>
+    
+    <tr>
+      <td>2024</td>
+      <td>7773.34</td>
+      <td>402.54</td>
+      <td>21.88%</td>
+      <td>22.45%</td>
+    </tr>
+    
+    <tr>
+      <td>2025</td>
+      <td>8500.00</td>
+      <td>500.00</td>
+      <td>22.50%</td>
+      <td>23.50%</td>
+    </tr>
+    
+  </tbody>
+</table>
     </div>
   </div>
 
-  <!-- ANCHOR:kline -->
   <section class="card" id="kline">
     <div class="section-eyebrow">price action</div>
-    <h2>K 线图 · 近 3 年</h2>
+    <h2>近 120 日 K 线</h2>
     <div id="chart-kline-full" style="height:480px;"></div>
-    <div class="data-grid" style="margin-top:16px;">
-      <div class="grid-row"><div>当前价</div><div>¥250.30</div><div>市值</div><div>¥7283 亿</div></div>
-      <div class="grid-row"><div>PE (TTM)</div><div>18.5</div><div>PB</div><div>4.2</div></div>
+    <div class="kpi-info-row">
+      <span>区间高：¥242.50</span>
+      <span>区间低：¥227.00</span>
+      <span>当前：¥242.00</span>
     </div>
   </section>
 
-  <!-- ANCHOR:step-0-mission -->
   <section class="card" id="mission">
-    <div class="section-eyebrow">step_00 · mission</div>
+    <div class="section-eyebrow">step_00 · task lock</div>
     <h2>任务锁定与核心矛盾</h2>
-    <div class="data-grid">
-      <div class="grid-row"><div>标的</div><div>比亚迪 002594.SZ</div><div>周期</div><div>中线（6-18 个月）</div></div>
-      <div class="grid-row"><div>数据截止</div><div>2026-05-15</div><div>研究状态</div><div>持续跟踪</div></div>
-      <div class="grid-row"><div>风格预判</div><div>配置型 + 事件驱动</div><div>命题</div><div>规模 vs. 利润弹性</div></div>
-    </div>
-    <p>核心矛盾：<strong>海外销量加速</strong>能否对冲国内价格战 + 锂价上行带来的<strong>毛利率压力</strong>。</p>
+    <table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标的</td>
+<td>比亚迪（002594.SZ）</td>
+</tr>
+<tr>
+<td>周期</td>
+<td>中线 1-2 季</td>
+</tr>
+<tr>
+<td>数据截止日</td>
+<td>2026-05-15</td>
+</tr>
+<tr>
+<td>研究状态</td>
+<td>持续跟踪</td>
+</tr>
+<tr>
+<td>风格预判</td>
+<td>配置型</td>
+</tr>
+</tbody>
+</table>
+
+    
+    <p>暂无 CRITICAL/HIGH 级异常。</p>
+
+    
   </section>
 
-  <!-- ANCHOR:step-1-macro -->
   <section class="card" id="macro">
     <div class="section-eyebrow">step_01 · macro</div>
     <h2>宏观与周期定位</h2>
-    <p>新能源车渗透率全球 28% <span class="tag-c">[C:BNEF·Global EV Outlook 2026]</span>（中国 52% / 欧洲 19% / 美国 9%）。中国进入「补贴退坡 + 价格内卷」末段，欧洲反补贴扰动短期但 2026 年欧 7 排放门槛实质利好头部 OEM。美国 IRA 限制下，比亚迪通过墨西哥/巴西本地化迂回切入。</p>
-    <p>政策环境：国内置换补贴持续；欧盟 17% 反补贴关税已落地（比亚迪 17%）；东南亚多国零关税友好。</p>
-    <p>核心矛盾提炼：<strong>全球化销量 vs. 单车利润压力</strong>。</p>
+    <ul>
+<li>经济周期：复苏中期 <span class="tag-i">[I:乘联会 2026-04 月报]</span></li>
+<li>政策阶段：发力期 <span class="tag-i">[I:汽车以旧换新政策延续]</span></li>
+<li>核心矛盾：海外加速 vs 国内价格战</li>
+</ul>
+
   </section>
 
-  <!-- ANCHOR:step-2-chain -->
   <section class="card" id="chain">
     <div class="section-eyebrow">step_02 · supply chain</div>
     <h2>产业链深度拆解</h2>
-    <svg width="100%" viewBox="0 0 800 240" style="max-height:240px;">
-      <rect x="20" y="40" width="160" height="60" fill="none" stroke="#1f2128"/>
-      <text class="svg-hdr" x="100" y="70" text-anchor="middle">上游</text>
-      <text class="svg-sub" x="100" y="88" text-anchor="middle">锂 / 钴 / 镍 / 电池材料</text>
-      <line x1="180" y1="70" x2="320" y2="70" stroke="#1f2128"/>
-      <rect x="320" y="40" width="160" height="60" fill="none" stroke="#5e6ad2"/>
-      <text class="svg-hdr" x="400" y="70" text-anchor="middle">比亚迪</text>
-      <text class="svg-sub" x="400" y="88" text-anchor="middle">整车 + 电池一体化</text>
-      <line x1="480" y1="70" x2="620" y2="70" stroke="#1f2128"/>
-      <rect x="620" y="40" width="160" height="60" fill="none" stroke="#1f2128"/>
-      <text class="svg-hdr" x="700" y="70" text-anchor="middle">下游</text>
-      <text class="svg-sub" x="700" y="88" text-anchor="middle">渠道 / 售后 / 二手</text>
-      <text class="svg-sub" x="400" y="160" text-anchor="middle">毛利率 18.2% · 行业最高之一</text>
-    </svg>
-    <p>价值链利润分布：上游电池材料毛利 15-22%（碳酸锂价格敏感），中游电池厂 18-26%，整车环节 8-15%（比亚迪因一体化获 +5-8pct 溢价）。</p>
+    <h3>2a. 题材来源判断</h3>
+<p>主业确定性强（整车 + 电池一体化），向&quot;海外 + 高端化&quot;两个方向延伸。</p>
+<h3>2b. 产业链图</h3>
+<div class="mermaid">
+flowchart LR
+  U["上游<br/>锂电材料·芯片·稀土"]
+  M["比亚迪<br/>整车+电池+半导体<br/>毛利 21.88%"]:::core
+  D["下游<br/>家用·出海·商用车"]
+  U --> M --> D
+  classDef core stroke:#5e6ad2,stroke-width:1.5px
+</div>
+<h3>2c. 业务线拆解</h3>
+<table>
+<thead>
+<tr>
+<th>业务线</th>
+<th>营收占比</th>
+<th>毛利率</th>
+<th>趋势三要素</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整车</td>
+<td>79%</td>
+<td>21%</td>
+<td>3/3 趋势确认</td>
+</tr>
+<tr>
+<td>电池外供</td>
+<td>12%</td>
+<td>15%</td>
+<td>2/3 可跟踪</td>
+</tr>
+</tbody>
+</table>
+
   </section>
 
-  <!-- ANCHOR:step-3-quality -->
   <section class="card" id="quality">
     <div class="section-eyebrow">step_03 · company quality</div>
-    <h2>公司质地评分</h2>
-    <p style="margin-bottom:16px;color:var(--ink-subtle);font-size:13px;">6 维度 100 分制 · 当前 <strong>72 / B 级</strong> <span class="tag-t">[T:quality_rubric.v3.1.6dims]</span></p>
-    <div class="score-row"><div class="k">财务质量</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">80</div></div>
-    <div class="score-row"><div class="k">竞争壁垒</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">82</div></div>
-    <div class="score-row"><div class="k">增长前景</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">65</div></div>
-    <div class="score-row"><div class="k">管理治理</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">70</div></div>
-    <div class="score-row"><div class="k">估值合理</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">68</div></div>
-    <div class="score-row"><div class="k">资金面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">75</div></div>
+    <h2>公司质地评分（Rubric · 100 分制）</h2>
+    <p style="margin-bottom:16px;color:var(--ink-subtle);font-size:13px;">
+      6 维 20 项二值检查 · 当前 <strong>72 / 100（14/20 ✓）</strong>
+    </p>
+    <h3>3a. 正面筛选清单</h3>
+<ul>
+<li>市值：6800 亿 <span class="tag-f">[F:quote.market_cap]</span>，达&quot;百亿优先&quot;标准</li>
+<li>行业地位：全球新能源乘用车销量第一 <span class="tag-i">[I:乘联会·2025 年度]</span></li>
+<li>现金流：2025 经营性现金流 / 营收 = 0.18 <span class="tag-c">[C: 1500/8500]</span></li>
+</ul>
+<h3>3b. 不碰清单（负面排查）</h3>
+<ul>
+<li>[ ] 市值 50 亿以下？ — 不适用</li>
+<li>[ ] 蹭概念？ — 否，主业坚实</li>
+<li>[ ] 看不到业绩落地？ — 否，季报持续验证</li>
+</ul>
+
+    
+
+<div class="score-row">
+  <div class="k">基本面（30）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg dim"></div>
+    <div class="score-seg dim"></div>
+    
+  </div>
+  <div class="pts">18/30</div>
+</div>
+
+
+<div class="score-row">
+  <div class="k">产业匹配（20）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg dim"></div>
+    
+  </div>
+  <div class="pts">16/20</div>
+</div>
+
+
+<div class="score-row">
+  <div class="k">业绩弹性（20）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg dim"></div>
+    
+  </div>
+  <div class="pts">14/20</div>
+</div>
+
+
+<div class="score-row">
+  <div class="k">估值与位置（15）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg dim"></div>
+    <div class="score-seg dim"></div>
+    
+  </div>
+  <div class="pts">10/15</div>
+</div>
+
+
+<div class="score-row">
+  <div class="k">资金交易（10）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg dim"></div>
+    
+  </div>
+  <div class="pts">9/10</div>
+</div>
+
+
+<div class="score-row">
+  <div class="k">治理风险（5）</div>
+  <div class="score-track">
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    <div class="score-seg lit"></div>
+    
+  </div>
+  <div class="pts">5/5</div>
+</div>
+
+    <h3>3d. 股权结构与公司治理</h3>
+<p>控股股东比亚迪实业（27%），无重大股东减持。机构持仓占比 38%。</p>
+
   </section>
 
-  <!-- ANCHOR:step-4-elasticity -->
   <section class="card" id="elasticity">
     <div class="section-eyebrow">step_04 · earnings elasticity</div>
     <h2>业绩弹性测算</h2>
     <div style="text-align:center;margin:16px 0;">
-      <div class="tree-top">EPS 弹性来源</div>
-      <div class="tree-line-v"></div>
-      <div class="tree-line-h"></div>
-    </div>
-    <div class="tree-children">
-      <div class="tree-child core">
-        <div class="name">整车海外销量</div>
-        <div class="nums">占比 78% · 毛利 20.5% · 弹性 2.4x</div>
-      </div>
-      <div class="tree-child">
-        <div class="name">电池外供</div>
-        <div class="nums">占比 12% · 毛利 16.0% · 弹性 1.5x</div>
-      </div>
-      <div class="tree-child">
-        <div class="name">手机部件</div>
-        <div class="nums">占比 10% · 毛利 8.5% · 弹性 0.6x</div>
-      </div>
-    </div>
-    <p style="margin-top:20px;">情景分析（FY26E）：悲观 EPS <strong>+8%</strong>（欧盟关税升至 25%）／基准 +24%／乐观 +38%（北美迂回 + 海洋系列爆款）。</p>
+  <div class="tree-top">归母净利弹性来源</div>
+  <div class="tree-line-v"></div>
+  <div class="tree-line-h"></div>
+</div>
+<div class="tree-children">
+  
+  <div class="tree-child core">
+    <div class="name">整车销量</div>
+    <div class="nums">占比 55% · 毛利 20% · 弹性 1.8x</div>
+  </div>
+  
+  <div class="tree-child">
+    <div class="name">电池外供</div>
+    <div class="nums">占比 12% · 毛利 15% · 弹性 1.2x</div>
+  </div>
+  
+  <div class="tree-child">
+    <div class="name">电子组装</div>
+    <div class="nums">占比 8% · 毛利 8% · 弹性 0.5x</div>
+  </div>
+  
+</div>
+    <h3>4b. 价格敏感度公式</h3>
+<ul>
+<li>整车 ASP 每 +5000 元 → 年增毛利 ~50 亿 <span class="tag-c">[C:10M × 5000 × 100%]</span></li>
+<li>电池外供出货量每 +10GWh → 年增营收 ~150 亿 <span class="tag-i">[I:行业价 1.5元/Wh]</span></li>
+</ul>
+<h3>4c. 情景分析</h3>
+<table>
+<thead>
+<tr>
+<th>情景</th>
+<th>触发条件</th>
+<th>营收（亿）</th>
+<th>净利（亿）</th>
+<th>EPS（元）</th>
+<th>PE-2026E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>悲观</td>
+<td>海外受阻</td>
+<td>8200</td>
+<td>420</td>
+<td>14.4</td>
+<td>16x</td>
+</tr>
+<tr>
+<td>基准</td>
+<td>海外加速兑现</td>
+<td>9200</td>
+<td>530</td>
+<td>18.2</td>
+<td>16x</td>
+</tr>
+<tr>
+<td>乐观</td>
+<td>海外 + 高端</td>
+<td>10200</td>
+<td>650</td>
+<td>22.3</td>
+<td>14x</td>
+</tr>
+</tbody>
+</table>
+
   </section>
 
-  <!-- ANCHOR:step-5-risk -->
   <section class="card" id="risk">
-    <div class="section-eyebrow">step_05 · risks &amp; logic-breaker</div>
-    <h2>风险分析</h2>
-    <div class="data-grid">
-      <div class="grid-head"><div>风险</div><div>影响</div><div>概率</div><div>对冲</div></div>
-      <div class="grid-row"><div>欧盟关税升至 25%+</div><div>高</div><div>中</div><div>墨西哥/巴西本地化</div></div>
-      <div class="grid-row"><div>国内价格战延续</div><div>中</div><div>高</div><div>高端海洋/腾势系列</div></div>
-      <div class="grid-row"><div>锂价反弹 >20 万/吨</div><div>中</div><div>低</div><div>长协 + 自有矿</div></div>
-      <div class="grid-row"><div>核心管理层变动</div><div>高</div><div>极低</div><div>—</div></div>
-    </div>
-    <p style="margin-top:16px;">逻辑破坏条件（任一触发即重审）：</p>
-    <p>· 单季海外销量同比 -10%（连续两季）<br>
-    · 季度净利率跌破 5%（持续 2 季）<br>
-    · 欧 + 美 + 东南亚 关税合计 >35%<br>
-    · 一体化业务被强制拆分<br>
-    · 王传福退休或重大持股变动</p>
+    <div class="section-eyebrow">step_05 · risk</div>
+    <h2>风险分析与逻辑破坏条件</h2>
+    <h3>5a. 风险清单</h3>
+<table>
+<thead>
+<tr>
+<th>风险类型</th>
+<th>具体场景</th>
+<th>影响</th>
+<th>概率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>行业周期</td>
+<td>国内价格战延续</td>
+<td>高</td>
+<td>中</td>
+</tr>
+<tr>
+<td>竞争格局</td>
+<td>特斯拉 Q3 降价</td>
+<td>中</td>
+<td>中</td>
+</tr>
+<tr>
+<td>客户集中度</td>
+<td>—</td>
+<td>低</td>
+<td>低</td>
+</tr>
+</tbody>
+</table>
+<h3>5b. 逻辑破坏条件</h3>
+<ol>
+<li>4 月销量同比转负 <span class="tag-f">[F:乘联会]</span></li>
+<li>电池外供毛利率跌破 12% <span class="tag-c">[C:成本结构]</span></li>
+<li>海外销量增速 &lt; 15% <span class="tag-i">[I:经销商口径]</span></li>
+</ol>
+
   </section>
 
-  <!-- ANCHOR:step-6-valuation -->
   <section class="card" id="valuation">
     <div class="section-eyebrow">step_06 · valuation</div>
     <h2>估值与买卖时机</h2>
-    <p>采用 PE-Band（最近 3 年 12-28x，当前 18.5x）+ DCF（WACC 9.5% / 永续 3%）+ 国际可比（Tesla 60x / Toyota 8x，给予 22x 中性）三法交叉。</p>
-    <div class="target-triple">
-      <div class="col"><div class="lbl">短期 / 3M</div><div class="price">¥230.00</div><div class="delta">PE 16x / 安全垫</div></div>
-      <div class="col mid"><div class="lbl">中期 / 6-12M</div><div class="price">¥290.00</div><div class="delta">+15.9% · PE 22x · 基准</div></div>
-      <div class="col"><div class="lbl">长期 / 18M+</div><div class="price">¥350.00</div><div class="delta">PE 26x / 海外放量</div></div>
-      <div class="footnote">基于 2026-05-15 收盘价 ¥250.30 · FY26E EPS 估算 ¥13.18</div>
-    </div>
-    <p style="margin-top:16px;">盈亏比量化：当前 ¥250.30 → 中期 ¥290（向上 ¥39.7）/ 止损 ¥236（向下 ¥14.3），<strong>R:R ≈ 2.8</strong>。技术面看，¥240-245 是 60 日均线 + 上行通道下沿支撑，左侧加仓窗口。</p>
+    <h3>6a. 估值方法选择</h3>
+<p>成长 + 周期混合定位，主用 PE 26x（2026E）+ 辅以 PB 4x。</p>
+<h3>6a+. 资金面分析</h3>
+<p>近 20 日北向资金净流入 12 亿 <span class="tag-f">[F:fund_flow]</span>，融资余额占比稳定。</p>
+<h3>6a++. 技术面分析</h3>
+<p>MA20/MA60 多头排列；当前 PE 历史 35% 分位 <span class="tag-c">[C:历史 PE 区间]</span>。</p>
+
+    <div class="targets-row">
+  <div class="t-cell">
+    <div class="k">SHORT-TERM</div>
+    <div class="v">¥230.00</div>
+  </div>
+  <div class="t-cell">
+    <div class="k">MID-TERM</div>
+    <div class="v target-mid">¥290.00 <span class="chg">↗ +15.9%</span></div>
+  </div>
+  <div class="t-cell">
+    <div class="k">LONG-TERM</div>
+    <div class="v">¥350.00</div>
+  </div>
+</div>
+<p class="t-footnote">基于 2026-05-15 收盘价</p>
+    <h3>6b. 期货关联</h3>
+<p>碳酸锂期货低位震荡，对整车毛利端构成温和利好。</p>
+<h3>6c. 研报对比</h3>
+<table>
+<thead>
+<tr>
+<th>机构</th>
+<th>日期</th>
+<th>目标价</th>
+<th>是否采纳</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>中金</td>
+<td>2026-04-22</td>
+<td>310</td>
+<td>部分（中位偏高）</td>
+</tr>
+<tr>
+<td>中信</td>
+<td>2026-04-15</td>
+<td>285</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<h3>6e. 盈亏比</h3>
+<p>向下空间 ¥230（-8%）/ 向上空间 ¥290（+16%）→ 盈亏比 2.8:1</p>
+<h3>6f. 框架原则对照</h3>
+<ul>
+<li>低位谈逻辑 / 高位讲情绪 → 当前估值分位 35%，宜聚焦逻辑</li>
+<li>盈亏比思维 → 满足&quot;2:1 以上&quot;门槛</li>
+</ul>
+
   </section>
 
-  <!-- ANCHOR:step-7-compare -->
   <section class="card" id="compare">
-    <div class="section-eyebrow">step_07 · peer comparison</div>
-    <h2>对标分析</h2>
-    <div class="data-grid">
-      <div class="grid-head"><div>公司</div><div>PE TTM</div><div>毛利率</div><div>ROE</div></div>
-      <div class="grid-row"><div>比亚迪</div><div>18.5</div><div>18.2%</div><div class="pos">24.1%</div></div>
-      <div class="grid-row"><div>特斯拉</div><div>62.0</div><div>17.6%</div><div>21.5%</div></div>
-      <div class="grid-row"><div>丰田</div><div>8.5</div><div>21.0%</div><div>12.3%</div></div>
-      <div class="grid-row"><div>大众</div><div>4.8</div><div>17.8%</div><div>9.8%</div></div>
-    </div>
-    <p style="margin-top:16px;">增长引擎切换：2020-2023 为「DM-i 国内放量」，2024-2025 为「海外破冰 + 高端化」，<strong>2026+ 进入「电池外供 + 自动驾驶」第三引擎</strong>。</p>
+    <div class="section-eyebrow">step_07 · peers</div>
+    <h2>对标与对比分析</h2>
+    <table>
+<thead>
+<tr>
+<th>维度</th>
+<th>比亚迪</th>
+<th>赛力斯</th>
+<th>宁德时代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>业务模型</td>
+<td>整车+电池+半导体</td>
+<td>整车（华为生态）</td>
+<td>电池纯供应</td>
+</tr>
+<tr>
+<td>2026 PE</td>
+<td>16x</td>
+<td>22x</td>
+<td>18x</td>
+</tr>
+<tr>
+<td>增长引擎</td>
+<td>海外 + 高端</td>
+<td>M9 系列 + 海外</td>
+<td>储能 + 海外</td>
+</tr>
+<tr>
+<td>适合风格</td>
+<td>配置型</td>
+<td>交易型</td>
+<td>配置型</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键区别</strong>：比亚迪垂直一体化优势更强，估值更具防御性。</p>
+
   </section>
 
-  <!-- ANCHOR:step-8-tracking -->
   <section class="card" id="tracking">
-    <div class="section-eyebrow">step_08 · tracking &amp; final scoring</div>
-    <h2>跟踪计划与综合评分</h2>
-    <p style="color:var(--ink-subtle);font-size:13px;margin-bottom:12px;">分层跟踪锚点：</p>
-    <p>· <strong>高频</strong>（周）：海外单月销量 / 欧洲订单簿 / 锂价</p>
-    <p>· <strong>季度</strong>：毛利率 / 单车净利 / 海外占比</p>
-    <p>· <strong>事件</strong>：欧 7 排放执行细则 / 美国关税 / 海洋系列上市节奏</p>
-    <p style="margin-top:20px;color:var(--ink-subtle);font-size:13px;margin-bottom:12px;">综合交易评分（5 维 100 分制）：</p>
-    <div class="score-row"><div class="k">基本面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">78</div></div>
-    <div class="score-row"><div class="k">资金面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">65</div></div>
-    <div class="score-row"><div class="k">技术面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">62</div></div>
-    <div class="score-row"><div class="k">情绪面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">55</div></div>
-    <div class="score-row"><div class="k">事件面</div><div class="score-track">
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg lit"></div>
-      <div class="score-seg dim"></div>
-    </div><div class="pts">75</div></div>
+    <div class="section-eyebrow">step_08 · tracking</div>
+    <h2>跟踪计划与综合结论</h2>
+    <h3>8a. 分层跟踪锚点</h3>
+<table>
+<thead>
+<tr>
+<th>频率</th>
+<th>跟踪内容</th>
+<th>数据源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>周度</td>
+<td>销量同比</td>
+<td>乘联会</td>
+</tr>
+<tr>
+<td>月度</td>
+<td>海外销量</td>
+<td>公司公告</td>
+</tr>
+<tr>
+<td>季度</td>
+<td>单季毛利率</td>
+<td>财报</td>
+</tr>
+</tbody>
+</table>
+<h3>8b. 执行清单</h3>
+<ul>
+<li>短线触发买点：跌破 ¥230 形成右侧</li>
+<li>中线持仓基础：2026Q2 销量增速 &gt; 15%</li>
+<li>失效信号：4 月销量同比转负</li>
+</ul>
+<h3>8c. 综合结论</h3>
+<ul>
+<li><strong>一句话判断</strong>：处于&quot;业绩兑现 + 海外提速&quot;的趋势确认阶段</li>
+<li><strong>风险等级</strong>：中</li>
+<li><strong>风格标签</strong>：配置型</li>
+<li><strong>操作建议</strong>：核心配置 + 择时左侧加仓</li>
+</ul>
+
   </section>
 
-  <!-- ANCHOR:bear-case -->
+  
   <section class="card" id="bear-case">
-    <div class="section-eyebrow">// BEAR CASE · 对立面观点</div>
+    <div class="section-eyebrow" style="color:var(--semantic-down);">// BEAR CASE · 对立面观点</div>
     <h2>如果多头错了，错在哪里</h2>
-    <p>本节由 Phase 2.6 bear-case sub-agent 自动生成。基于 anomalies.md，提出 3 条可能让多头观点失败的路径：</p>
-    <p>1. <strong>欧盟反补贴升至 30%</strong>：若 25% → 30%，墨西哥/巴西本地化产能 2026 H1 难承接，海外销量增长断档；对应 anomaly A002。</p>
-    <p>2. <strong>锂价反弹突破 25 万/吨</strong>：自有矿对冲不足以覆盖外购缺口，单车毛利率掉 4-5pct；对应 anomaly A005。</p>
-    <p>3. <strong>海洋系列高端化失速</strong>：若 25 万以上车型月销跌破 1 万，品牌溢价路径中断，整体估值锚降回 Toyota 模型（PE 8-10x）。</p>
-    <p>验证信号：① 单季海外销量同比 &lt; +5%；② 单车净利 &lt; 6000 元；③ 海洋系列旗舰月销连续两月 &lt; 1.2 万。任一触发即重审多头逻辑。</p>
-  </section>
+    <h2>空头对立面</h2>
+<p><strong>如果多头错了，错在哪里</strong>：</p>
+<ol>
+<li><strong>海外销量证伪</strong>：欧洲反补贴税最终落地若高于 20%，2026 出海预期需下修 30%+，对应基准情景净利从 530 亿 → 470 亿，PE 抬升至 17.5x。</li>
+<li><strong>国内价格战拖累毛利</strong>：单车 ASP 持续下行，整车毛利率若回落到 18%（vs 2024 的 21%），即使销量持平，年净利负面冲击约 60 亿。</li>
+<li><strong>电池外供放量不及预期</strong>：宁德 + LG 双面挤压，外供毛利率跌破 12% 的概率被低估。</li>
+</ol>
+<p><strong>信号确认</strong>：</p>
+<ul>
+<li>4 月乘联会销量同比转负</li>
+<li>公司发布出海销售指引下调</li>
+<li>二季报单季毛利率 &lt; 20%</li>
+</ul>
+<p>引用异常：A002、A005。</p>
 
-  <!-- ANCHOR:conclusion-box -->
+  </section>
+  
+
   <section class="card" id="conclusion">
     <div class="section-eyebrow">// CONCLUSION</div>
-    <h2>一句话判断</h2>
-    <p><strong>规模与利润弹性同时开口的中期配置型标的</strong>。短期 ¥240-245 区间左侧加仓，中期 ¥290 目标 +15.9%，盈亏比 2.8，风险评级中。逻辑破坏条件清晰，建议持续跟踪海外销量与欧盟关税细则。</p>
+    <h2>综合结论</h2>
+    <p>见 #tracking 卡。</p>
   </section>
 
-</div><!-- /.container -->
-
-<!-- ANCHOR:footer -->
-<footer>
-<div class="container">
-<p>⚠ 免责声明：本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</p>
-<p>数据截止：2026-05-15 · 研究状态：持续跟踪</p>
-<p>数据来源：akshare(雪球/新浪/同花顺/东方财富/巨潮资讯) · stock-analysis</p>
+  <footer>
+    <p>⚠ 免责声明：本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</p>
+    <p>数据截止：2026-05-15 · 研究状态：持续跟踪</p>
+    <p>数据来源：akshare</p>
+  </footer>
 </div>
-</footer>
 
-<!-- ANCHOR:script -->
 <script>
+/* =============================================================
+   stock-analysis · template_base.js
+   K 线图 + 饼图 ECharts 配置（lavender accent 主题）
+   ============================================================= */
+
 (function () {
   'use strict';
 
-  const rawData = [["2026-02-20", 230.96, 224.41, 223.67, 231.58, 48141204], ["2026-02-23", 225.6, 231.91, 225.36, 233.09, 16340874], ["2026-02-24", 229.96, 230.61, 229.88, 231.16, 44244799], ["2026-02-25", 230.92, 227.3, 225.7, 233.16, 15292444], ["2026-02-26", 229.39, 232.92, 228.45, 233.35, 58074588], ["2026-02-27", 231.77, 226.22, 225.96, 234.13, 42167671], ["2026-03-02", 228.3, 232.28, 226.83, 234.99, 32034046], ["2026-03-03", 232.64, 238.21, 230.92, 240.67, 40980846], ["2026-03-04", 239.67, 233.19, 232.56, 240.5, 18590638], ["2026-03-05", 231.32, 225.9, 225.15, 233.09, 31417448], ["2026-03-06", 225.02, 221.34, 220.63, 227.55, 44161592], ["2026-03-09", 222.06, 217.87, 215.96, 222.5, 32075494], ["2026-03-10", 221.07, 223.63, 219.59, 225.47, 52928336], ["2026-03-11", 225.49, 222.08, 221.99, 226.34, 27048339], ["2026-03-12", 220.15, 227.04, 217.84, 227.9, 44494739], ["2026-03-13", 226.33, 232.99, 225.08, 233.74, 26098237], ["2026-03-16", 233.42, 230.41, 228.79, 235.94, 32973022], ["2026-03-17", 228.47, 236.43, 227.07, 236.68, 17120236], ["2026-03-18", 233.66, 236.18, 231.44, 237.37, 17858746], ["2026-03-19", 235.34, 243.52, 233.84, 246.35, 53735086], ["2026-03-20", 239.95, 243.99, 237.98, 245.56, 27007133], ["2026-03-23", 245.02, 239.45, 238.2, 246.36, 57921716], ["2026-03-24", 242.15, 239.03, 237.59, 242.67, 56068252], ["2026-03-25", 241.69, 239.12, 237.29, 243.45, 21877767], ["2026-03-26", 241.01, 242.23, 238.76, 243.77, 15025735], ["2026-03-27", 240.95, 234.03, 231.42, 243.49, 52424948], ["2026-03-30", 232.67, 226.57, 224.18, 235.32, 18854405], ["2026-03-31", 226.47, 220.7, 218.68, 228.56, 20777615], ["2026-04-01", 220.54, 221.8, 219.83, 224.12, 34041207], ["2026-04-02", 219.88, 220.99, 217.96, 221.53, 29027233], ["2026-04-03", 224.28, 227.02, 223.1, 228.43, 20445188], ["2026-04-06", 225.15, 223.34, 221.76, 225.77, 24909782], ["2026-04-07", 220.47, 222.9, 219.86, 225.32, 53683593], ["2026-04-08", 220.03, 216.83, 215.09, 220.59, 20954033], ["2026-04-09", 219.66, 221.23, 218.42, 223.31, 51337364], ["2026-04-10", 219.17, 213.98, 212.87, 220.29, 36016110], ["2026-04-13", 215.45, 218.41, 212.9, 218.67, 33117957], ["2026-04-14", 217.36, 223.01, 216.71, 223.52, 35187609], ["2026-04-15", 222.49, 219.85, 219.19, 224.96, 34940883], ["2026-04-16", 222.23, 223.51, 222.09, 226.19, 52621241], ["2026-04-17", 226.66, 233.5, 224.35, 233.97, 36853850], ["2026-04-20", 231.5, 230.59, 230.43, 232.55, 59338897], ["2026-04-21", 228.96, 233.76, 227.71, 234.95, 58079293], ["2026-04-22", 237.24, 238.69, 235.19, 239.14, 28351852], ["2026-04-23", 242.05, 243.9, 240.47, 246.09, 17572437], ["2026-04-24", 244.52, 245.17, 242.01, 245.63, 58235050], ["2026-04-27", 242.08, 237.74, 236.05, 244.04, 25584175], ["2026-04-28", 235.03, 241.58, 234.34, 243.31, 42872167], ["2026-04-29", 241.0, 242.91, 239.49, 245.64, 24191663], ["2026-04-30", 244.49, 240.95, 239.8, 246.46, 28499868], ["2026-05-01", 239.62, 244.14, 239.41, 245.48, 59930449], ["2026-05-04", 247.77, 241.52, 240.9, 248.56, 56996672], ["2026-05-05", 244.28, 250.91, 243.2, 251.39, 52518522], ["2026-05-06", 252.44, 254.91, 249.45, 256.91, 15352039], ["2026-05-07", 257.33, 254.62, 252.59, 260.23, 21043100], ["2026-05-08", 251.68, 245.88, 244.25, 252.5, 42217342], ["2026-05-11", 247.49, 243.34, 241.49, 248.27, 36983933], ["2026-05-12", 246.3, 252.45, 246.02, 253.74, 27450610], ["2026-05-13", 248.69, 253.7, 246.79, 254.5, 48355390], ["2026-05-14", 254.09, 253.53, 253.5, 254.32, 54739787]];
-  const pieData = [{"name": "汽车及电池", "value": 78}, {"name": "手机部件", "value": 12}, {"name": "电子代工", "value": 10}];
+  // 数据注入点：render_html.py 通过 Jinja2 注入实际数组（v5 起）
+  const rawData = [[230.0, 228.5, 228.0, 230.5], [228.5, 227.5, 227.0, 229.0], [227.5, 228.0, 227.0, 228.5], [228.0, 229.0, 227.5, 229.5], [229.0, 230.5, 228.5, 231.0], [230.5, 229.0, 228.5, 231.0], [229.0, 228.0, 227.5, 229.5], [228.0, 228.5, 227.5, 229.0], [228.5, 229.5, 228.0, 230.0], [229.5, 231.0, 229.0, 231.5], [231.0, 229.5, 229.0, 231.5], [229.5, 228.5, 228.0, 230.0], [228.5, 229.0, 228.0, 229.5], [229.0, 230.0, 228.5, 230.5], [230.0, 231.5, 229.5, 232.0], [231.5, 230.0, 229.5, 232.0], [230.0, 229.0, 228.5, 230.5], [229.0, 229.5, 228.5, 230.0], [229.5, 230.5, 229.0, 231.0], [230.5, 232.0, 230.0, 232.5], [232.0, 230.5, 230.0, 232.5], [230.5, 229.5, 229.0, 231.0], [229.5, 230.0, 229.0, 230.5], [230.0, 231.0, 229.5, 231.5], [231.0, 232.5, 230.5, 233.0], [232.5, 231.0, 230.5, 233.0], [231.0, 230.0, 229.5, 231.5], [230.0, 230.5, 229.5, 231.0], [230.5, 231.5, 230.0, 232.0], [231.5, 233.0, 231.0, 233.5], [233.0, 231.5, 231.0, 233.5], [231.5, 230.5, 230.0, 232.0], [230.5, 231.0, 230.0, 231.5], [231.0, 232.0, 230.5, 232.5], [232.0, 233.5, 231.5, 234.0], [233.5, 232.0, 231.5, 234.0], [232.0, 231.0, 230.5, 232.5], [231.0, 231.5, 230.5, 232.0], [231.5, 232.5, 231.0, 233.0], [232.5, 234.0, 232.0, 234.5], [234.0, 232.5, 232.0, 234.5], [232.5, 231.5, 231.0, 233.0], [231.5, 232.0, 231.0, 232.5], [232.0, 233.0, 231.5, 233.5], [233.0, 234.5, 232.5, 235.0], [234.5, 233.0, 232.5, 235.0], [233.0, 232.0, 231.5, 233.5], [232.0, 232.5, 231.5, 233.0], [232.5, 233.5, 232.0, 234.0], [233.5, 235.0, 233.0, 235.5], [235.0, 233.5, 233.0, 235.5], [233.5, 232.5, 232.0, 234.0], [232.5, 233.0, 232.0, 233.5], [233.0, 234.0, 232.5, 234.5], [234.0, 235.5, 233.5, 236.0], [235.5, 234.0, 233.5, 236.0], [234.0, 233.0, 232.5, 234.5], [233.0, 233.5, 232.5, 234.0], [233.5, 234.5, 233.0, 235.0], [234.5, 236.0, 234.0, 236.5], [236.0, 234.5, 234.0, 236.5], [234.5, 233.5, 233.0, 235.0], [233.5, 234.0, 233.0, 234.5], [234.0, 235.0, 233.5, 235.5], [235.0, 236.5, 234.5, 237.0], [236.5, 235.0, 234.5, 237.0], [235.0, 234.0, 233.5, 235.5], [234.0, 234.5, 233.5, 235.0], [234.5, 235.5, 234.0, 236.0], [235.5, 237.0, 235.0, 237.5], [237.0, 235.5, 235.0, 237.5], [235.5, 234.5, 234.0, 236.0], [234.5, 235.0, 234.0, 235.5], [235.0, 236.0, 234.5, 236.5], [236.0, 237.5, 235.5, 238.0], [237.5, 236.0, 235.5, 238.0], [236.0, 235.0, 234.5, 236.5], [235.0, 235.5, 234.5, 236.0], [235.5, 236.5, 235.0, 237.0], [236.5, 238.0, 236.0, 238.5], [238.0, 236.5, 236.0, 238.5], [236.5, 235.5, 235.0, 237.0], [235.5, 236.0, 235.0, 236.5], [236.0, 237.0, 235.5, 237.5], [237.0, 238.5, 236.5, 239.0], [238.5, 237.0, 236.5, 239.0], [237.0, 236.0, 235.5, 237.5], [236.0, 236.5, 235.5, 237.0], [236.5, 237.5, 236.0, 238.0], [237.5, 239.0, 237.0, 239.5], [239.0, 237.5, 237.0, 239.5], [237.5, 236.5, 236.0, 238.0], [236.5, 237.0, 236.0, 237.5], [237.0, 238.0, 236.5, 238.5], [238.0, 239.5, 237.5, 240.0], [239.5, 238.0, 237.5, 240.0], [238.0, 237.0, 236.5, 238.5], [237.0, 237.5, 236.5, 238.0], [237.5, 238.5, 237.0, 239.0], [238.5, 240.0, 238.0, 240.5], [240.0, 238.5, 238.0, 240.5], [238.5, 237.5, 237.0, 239.0], [237.5, 238.0, 237.0, 238.5], [238.0, 239.0, 237.5, 239.5], [239.0, 240.5, 238.5, 241.0], [240.5, 239.0, 238.5, 241.0], [239.0, 238.0, 237.5, 239.5], [238.0, 238.5, 237.5, 239.0], [238.5, 239.5, 238.0, 240.0], [239.5, 241.0, 239.0, 241.5], [241.0, 239.5, 239.0, 241.5], [239.5, 238.5, 238.0, 240.0], [238.5, 239.0, 238.0, 239.5], [239.0, 240.0, 238.5, 240.5], [240.0, 241.5, 239.5, 242.0], [241.5, 240.0, 239.5, 242.0], [240.0, 239.0, 238.5, 240.5], [239.0, 239.5, 238.5, 240.0], [239.5, 240.5, 239.0, 241.0], [240.5, 242.0, 240.0, 242.5]];
+  const pieData = [{"name": "\u6c7d\u8f66\u53ca\u76f8\u5173\u4ea7\u54c1", "value": 6700}, {"name": "\u52a8\u529b\u7535\u6c60\u5916\u4f9b", "value": 1020}, {"name": "\u7535\u5b50\u7ec4\u88c5", "value": 680}, {"name": "\u5176\u5b83", "value": 100}];
 
+  // ============================================================
+  //  色板（与 template_base.css 一致）
+  // ============================================================
   const C = {
-    canvas: '#010102', surface1: '#0c0d10', hairline: '#1f2128',
-    ink: '#f7f8f8', inkMuted: '#d0d6e0', inkSubtle: '#8a8f98',
-    accent: '#5e6ad2', accentHover: '#828fff',
-    up: '#ff5a5f', down: '#27a644',
+    canvas: '#010102',
+    surface1: '#0c0d10',
+    hairline: '#1f2128',
+    ink: '#f7f8f8',
+    inkMuted: '#d0d6e0',
+    inkSubtle: '#8a8f98',
+    accent: '#5e6ad2',
+    accentHover: '#828fff',
+    up: '#ff5a5f',   // 涨色（A 股惯例：红）
+    down: '#27a644', // 跌色（A 股惯例：绿）
   };
 
+  // ============================================================
+  //  K 线图
+  // ============================================================
   function renderKline() {
     const dom = document.getElementById('chart-kline-full');
     if (!dom || !rawData || rawData.length === 0) return;
+
     const chart = echarts.init(dom, null, { renderer: 'canvas' });
+
     const dates = rawData.map(r => r[0]);
+    // OHLC 格式：[open, close, low, high]（ECharts candlestick 默认）
     const ohlc = rawData.map(r => [r[1], r[2], r[3], r[4]]);
-    const volumes = rawData.map(r => ({ value: r[5], itemStyle: { color: r[2] >= r[1] ? C.up : C.down } }));
+    const volumes = rawData.map((r, i) => ({
+      value: r[5],
+      itemStyle: { color: r[2] >= r[1] ? C.up : C.down },
+    }));
+
+    // MA5 / MA20
     const ma = (n) => dates.map((_, i) => {
       if (i < n - 1) return '-';
-      let sum = 0; for (let j = 0; j < n; j++) sum += rawData[i - j][2];
+      let sum = 0;
+      for (let j = 0; j < n; j++) sum += rawData[i - j][2];
       return (sum / n).toFixed(2);
     });
+
     chart.setOption({
       backgroundColor: 'transparent',
-      grid: [{ left: 60, right: 32, top: 32, height: '60%' }, { left: 60, right: 32, top: '72%', height: '20%' }],
+      grid: [
+        { left: 60, right: 32, top: 32, height: '60%' },
+        { left: 60, right: 32, top: '72%', height: '20%' },
+      ],
       xAxis: [
         { type: 'category', data: dates, axisLine: { lineStyle: { color: C.hairline } }, axisLabel: { color: C.inkSubtle, fontFamily: 'IBM Plex Mono' } },
         { type: 'category', gridIndex: 1, data: dates, axisLine: { lineStyle: { color: C.hairline } }, axisLabel: { show: false } },
@@ -866,10 +1219,20 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
         { type: 'value', scale: true, splitLine: { lineStyle: { color: C.hairline, type: 'dashed' } }, axisLabel: { color: C.inkSubtle, fontFamily: 'IBM Plex Mono' } },
         { type: 'value', gridIndex: 1, splitLine: { show: false }, axisLabel: { color: C.inkSubtle, fontFamily: 'IBM Plex Mono' } },
       ],
-      tooltip: { trigger: 'axis', backgroundColor: C.surface1, borderColor: C.hairline, textStyle: { color: C.inkMuted, fontFamily: 'IBM Plex Mono' } },
-      dataZoom: [{ type: 'inside', xAxisIndex: [0, 1], start: 60, end: 100 }],
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: C.surface1,
+        borderColor: C.hairline,
+        textStyle: { color: C.inkMuted, fontFamily: 'IBM Plex Mono' },
+      },
+      dataZoom: [
+        { type: 'inside', xAxisIndex: [0, 1], start: 70, end: 100 },
+      ],
       series: [
-        { type: 'candlestick', data: ohlc, itemStyle: { color: C.up, color0: C.down, borderColor: C.up, borderColor0: C.down } },
+        {
+          type: 'candlestick', data: ohlc,
+          itemStyle: { color: C.up, color0: C.down, borderColor: C.up, borderColor0: C.down },
+        },
         { type: 'line', name: 'MA5', data: ma(5), smooth: true, showSymbol: false, lineStyle: { color: C.accent, width: 1 } },
         { type: 'line', name: 'MA20', data: ma(20), smooth: true, showSymbol: false, lineStyle: { color: C.accentHover, width: 1 } },
         { type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: volumes },
@@ -878,29 +1241,84 @@ footer strong { color: var(--ink-tertiary); font-weight: 400; }
     window.addEventListener('resize', () => chart.resize());
   }
 
+  // ============================================================
+  //  饼图（主营业务构成）
+  // ============================================================
   function renderPie() {
     const dom = document.getElementById('chart-business-pie');
     if (!dom || !pieData || pieData.length === 0) return;
+
     const chart = echarts.init(dom, null, { renderer: 'canvas' });
     chart.setOption({
       backgroundColor: 'transparent',
-      tooltip: { trigger: 'item', backgroundColor: C.surface1, borderColor: C.hairline, textStyle: { color: C.inkMuted, fontFamily: 'IBM Plex Mono' } },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: C.surface1,
+        borderColor: C.hairline,
+        textStyle: { color: C.inkMuted, fontFamily: 'IBM Plex Mono' },
+      },
       legend: { textStyle: { color: C.inkSubtle, fontFamily: 'Inter' }, bottom: 0 },
       series: [{
-        type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
-        data: pieData.map((d, i) => ({ ...d, itemStyle: { color: i === 0 ? C.accent : (i === 1 ? C.accentHover : C.hairline), borderColor: C.canvas, borderWidth: 2 } })),
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        data: pieData.map((d, i) => ({
+          ...d,
+          itemStyle: {
+            color: i === 0 ? C.accent : (i === 1 ? C.accentHover : C.hairline),
+            borderColor: C.canvas,
+            borderWidth: 2,
+          },
+        })),
         label: { color: C.inkMuted, fontFamily: 'Inter' },
       }],
     });
     window.addEventListener('resize', () => chart.resize());
   }
 
+  // ============================================================
+  //  数据时效性提示
+  // ============================================================
+  function renderStaleWarn() {
+    const meta = document.querySelector('meta[name="data-as-of"]');
+    if (!meta) return;
+    const asOf = new Date(meta.content);
+    const days = Math.floor((Date.now() - asOf.getTime()) / 86400000);
+    if (days > 7) {
+      const warn = document.createElement('div');
+      warn.className = 'data-stale-warn';
+      warn.textContent = `数据已 ${days} 天未刷新，建议重新生成`;
+      const banner = document.querySelector('.compliance-banner');
+      if (banner) banner.after(warn);
+    }
+  }
+
+  // ============================================================
+  //  初始化
+  // ============================================================
   document.addEventListener('DOMContentLoaded', () => {
     renderKline();
     renderPie();
-    if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+    renderStaleWarn();
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise();
+    }
   });
 })();
+
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  themeVariables: {
+    background: '#010102',
+    primaryColor: '#0c0d10',
+    primaryBorderColor: '#1f2128',
+    primaryTextColor: '#d0d6e0',
+    lineColor: '#1f2128',
+    fontFamily: 'IBM Plex Mono, Menlo, monospace',
+    fontSize: '12px'
+  }
+});
 </script>
 </body>
 </html>
