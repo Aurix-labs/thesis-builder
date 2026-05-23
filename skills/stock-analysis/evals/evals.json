@@ -1,0 +1,87 @@
+{
+  "skill_name": "stock-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "name": "default-report",
+      "prompt": "看下002594",
+      "expected_output": "Skill triggers and runs the default `report` module for stock 002594 (比亚迪). Reuses TTL-fresh module snapshots where possible, regenerates expired modules, then composes report.md + report.html and runs verify_consistency.py + verify_html.sh until all PASS.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_module.py with stock=002594 and module=report",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Final report.html exists at output/比亚迪_002594/report/<ymd>/report.html",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "stdout JSONL of run_module.py contains a 'status' field with value 'reuse' or 'data_ready' for each module",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "verify_html.sh on final report.html exits 0 (all PASS)",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "single-module-no-html",
+      "prompt": "002594 估值多少",
+      "expected_output": "Skill triggers and runs ONLY the `valuation` module for stock 002594. Produces valuation/<ymd>/report.md but does NOT produce report/<ymd>/report.html (R4: single modules never emit HTML).",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_module.py with stock=002594 and module=valuation",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "valuation/<ymd>/report.md exists in output/比亚迪_002594/",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "No file matching output/比亚迪_002594/report/*/report.html was created during this run",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "compose_report.py is NOT invoked",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "force-translation",
+      "prompt": "重新跑下 002594 的估值",
+      "expected_output": "Skill triggers, recognizes '重新跑下' as a refresh intent (R2), and invokes the valuation module with --force, bypassing TTL.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_module.py with stock=002594, module=valuation, AND --force flag",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "stdout JSONL of run_module.py contains a 'status' field with value 'data_ready' (not 'reuse'), proving --force took effect",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Fresh valuation/<today-ymd>/report.md is produced",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    }
+  ]
+}
