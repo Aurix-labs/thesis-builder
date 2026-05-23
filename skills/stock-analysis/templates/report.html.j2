@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="data-as-of" content="{{ meta.data_as_of }}">
+<title>{{ meta.stock_name }} {{ meta.stock_code }} · 深度研究 · {{ meta.ymd }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+{% include "template_base.css" %}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <div class="left"><span class="status-dot"></span>DEEP RESEARCH · v5 · ACTIVE</div>
+  <div class="nav-links">
+    <a href="#hero">行情</a>
+    <a href="#conclusion-top">结论</a>
+    <a href="#profile">画像</a>
+    <a href="#financial">财务</a>
+    <a href="#kline">K线</a>
+    <a href="#mission">任务</a>
+    <a href="#macro">宏观</a>
+    <a href="#chain">产业链</a>
+    <a href="#quality">质量</a>
+    <a href="#elasticity">弹性</a>
+    <a href="#risk">风险</a>
+    <a href="#valuation">估值</a>
+    <a href="#compare">对标</a>
+    {%- if bear_case_html %}
+    <a href="#bear-case">空头</a>
+    {%- endif %}
+  </div>
+  <div class="right">SESSION {{ meta.session_id }} · {{ meta.ymd }} {{ meta.time_utc8 }} UTC+8</div>
+</nav>
+
+<div class="container">
+
+  <div class="compliance-banner">[RESEARCH ONLY] 本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</div>
+
+  <section class="hero" id="hero">
+    <div>
+      <h1 class="ticker">{{ meta.stock_name }}<span class="code">{{ meta.stock_code }}</span></h1>
+      <p class="lead">{{ hero_lead }}</p>
+    </div>
+    <div class="hero-spark">
+      <div class="lbl">D-T-D / 24H</div>
+      <div class="pct {{ sparkline_direction }}">{{ "%+.2f"|format(sparkline_pct) }}%</div>
+      {% include "partials/sparkline.html.j2" %}
+    </div>
+  </section>
+
+  {% include "partials/meta_row.html.j2" %}
+
+  <section class="card" id="conclusion-top">
+    <div class="section-eyebrow">core thesis</div>
+    <h2>{{ chain.summary.thesis_one_liner | default("核心论点：见任务卡") }}</h2>
+    {{ md_to_html(sections.step_0) | safe }}
+  </section>
+
+  <div class="grid-2" id="profile">
+    <div class="card">
+      <div class="section-eyebrow">company profile</div>
+      <h3>公司画像</h3>
+      <p>{{ company_profile_text }}</p>
+    </div>
+    <div class="card">
+      <div class="section-eyebrow">recent news</div>
+      <h3>近期动态</h3>
+      {% for n in recent_news %}
+      <p style="font-size:13px;">· {{ n }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid-2" id="financial">
+    <div class="card">
+      <div class="section-eyebrow">business segments</div>
+      <h3>主营业务构成</h3>
+      <div id="chart-business-pie" style="height:260px;"></div>
+    </div>
+    <div class="card">
+      <div class="section-eyebrow">financials</div>
+      <h3>核心财务</h3>
+      {% include "partials/financial_table.html.j2" %}
+    </div>
+  </div>
+
+  <section class="card" id="kline">
+    <div class="section-eyebrow">price action</div>
+    <h2>近 120 日 K 线</h2>
+    <div id="chart-kline-full" style="height:480px;"></div>
+    <div class="kpi-info-row">
+      <span>区间高：¥{{ "%.2f"|format(kline_stats.high) }}</span>
+      <span>区间低：¥{{ "%.2f"|format(kline_stats.low) }}</span>
+      <span>当前：¥{{ "%.2f"|format(kline_stats.last_close) }}</span>
+    </div>
+  </section>
+
+  <section class="card" id="mission">
+    <div class="section-eyebrow">step_00 · task lock</div>
+    <h2>任务锁定与核心矛盾</h2>
+    {{ md_to_html(sections.step_0) | safe }}
+    {% if sections.step_0_5 %}
+    {{ md_to_html(sections.step_0_5) | safe }}
+    {% endif %}
+  </section>
+
+  <section class="card" id="macro">
+    <div class="section-eyebrow">step_01 · macro</div>
+    <h2>宏观与周期定位</h2>
+    {{ md_to_html(sections.step_1) | safe }}
+  </section>
+
+  <section class="card" id="chain">
+    <div class="section-eyebrow">step_02 · supply chain</div>
+    <h2>产业链深度拆解</h2>
+    {{ md_to_html(sections.step_2) | safe }}
+  </section>
+
+  <section class="card" id="quality">
+    <div class="section-eyebrow">step_03 · company quality</div>
+    <h2>公司质地评分（Rubric · 100 分制）</h2>
+    <p style="margin-bottom:16px;color:var(--ink-subtle);font-size:13px;">
+      6 维 20 项二值检查 · 当前 <strong>{{ rubric.summary.total }} / 100（{{ rubric.summary.passed }}/20 ✓）</strong>
+    </p>
+    {{ md_to_html(sections.step_3_pre) | safe }}
+    {% include "partials/score_track.html.j2" %}
+    {{ md_to_html(sections.step_3_post) | safe }}
+  </section>
+
+  <section class="card" id="elasticity">
+    <div class="section-eyebrow">step_04 · earnings elasticity</div>
+    <h2>业绩弹性测算</h2>
+    {% include "partials/elasticity_tree.html.j2" %}
+    {{ md_to_html(sections.step_4_post) | safe }}
+  </section>
+
+  <section class="card" id="risk">
+    <div class="section-eyebrow">step_05 · risk</div>
+    <h2>风险分析与逻辑破坏条件</h2>
+    {{ md_to_html(sections.step_5) | safe }}
+  </section>
+
+  <section class="card" id="valuation">
+    <div class="section-eyebrow">step_06 · valuation</div>
+    <h2>估值与买卖时机</h2>
+    {{ md_to_html(sections.step_6_pre) | safe }}
+    {% include "partials/targets.html.j2" %}
+    {{ md_to_html(sections.step_6_post) | safe }}
+  </section>
+
+  <section class="card" id="compare">
+    <div class="section-eyebrow">step_07 · peers</div>
+    <h2>对标与对比分析</h2>
+    {{ md_to_html(sections.step_7) | safe }}
+  </section>
+
+  <section class="card" id="tracking">
+    <div class="section-eyebrow">step_08 · tracking</div>
+    <h2>跟踪计划与综合结论</h2>
+    {{ md_to_html(sections.step_8) | safe }}
+  </section>
+
+  {% if bear_case_html %}
+  <section class="card" id="bear-case">
+    <div class="section-eyebrow" style="color:var(--semantic-down);">// BEAR CASE · 对立面观点</div>
+    <h2>如果多头错了，错在哪里</h2>
+    {{ bear_case_html | safe }}
+  </section>
+  {% endif %}
+
+  <section class="card" id="conclusion">
+    <div class="section-eyebrow">// CONCLUSION</div>
+    <h2>综合结论</h2>
+    <p>{{ final_conclusion }}</p>
+  </section>
+
+  <footer>
+    <p>⚠ 免责声明：本报告仅供研究参考，不构成投资建议。投资有风险，决策需谨慎。</p>
+    <p>数据截止：{{ meta.data_as_of }} · 研究状态：{{ meta.research_status }}</p>
+    <p>数据来源：akshare</p>
+  </footer>
+</div>
+
+<script>
+{% include "template_base.js" %}
+
+// === 数据注入 ===
+const rawData = {{ kline_echarts_data | tojson }};
+const pieData = {{ pie_data | tojson }};
+
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  themeVariables: {
+    background: '#010102',
+    primaryColor: '#0c0d10',
+    primaryBorderColor: '#1f2128',
+    primaryTextColor: '#d0d6e0',
+    lineColor: '#1f2128',
+    fontFamily: 'IBM Plex Mono, Menlo, monospace',
+    fontSize: '12px'
+  }
+});
+</script>
+</body>
+</html>
