@@ -14,7 +14,7 @@
 6. `python scripts/verify_consistency.py --report <merged>` → 必须 0 FAIL
 7. 调 bear-case sub-agent → append 到 report.md
 8. 调 fact-check sub-agent → 写 `report/<today>/fact-check.md`
-9. 按 [../batch-checklist.md](../batch-checklist.md) 分 6 批写 report.html
+9. `python scripts/render_html.py <code> <ymd>` → `report/<today>/report.html`（agent 不写 HTML）
 10. `bash scripts/verify_html.sh report/<today>/report.html` → 全 PASS
 
 ## Step 0 任务锁定（agent 在 merged report.md 顶部插入）
@@ -99,8 +99,19 @@
 - 每条 FAIL 必含 location + 问题描述 + 修复指令
 ```
 
-## HTML 6 批分写
+## HTML 渲染（v5 起由脚本完成）
 
-完整指引见 [../batch-checklist.md](../batch-checklist.md)、[../html-spec.md](../html-spec.md)。
+HTML 不再由 agent 手写。完整的 report.html 由 `scripts/render_html.py` 一次产出：
 
-每批 ≤300 行，写完跑该批 grep 校验。合并后跑 `bash scripts/verify_html.sh report.html` → 全 PASS。
+```bash
+python scripts/render_html.py <code_or_name> <ymd>
+```
+
+输入：
+- `report/<ymd>/report.md` —— merged 后的全报告（含 Step 0 + Step 8 + bear-case append）
+- `report/<ymd>/data.json` —— compose 合并后的全模块 data（含各模块 summary 子键）
+
+输出：
+- `report/<ymd>/report.html`
+
+设计规范见 [../html-spec.md](../html-spec.md)。
