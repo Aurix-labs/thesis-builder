@@ -31,8 +31,15 @@ check() {
 # 1. lavender 主题
 check "accent lavender token" "[ \$(grep -c -- '\--accent: *#5e6ad2' '$FILE') -ge 1 ]"
 
-# 2. nav 13 个锚点
-check "nav 13 anchors" "[ \$(grep -o 'href=\"#' '$FILE' | wc -l) -ge 13 ]"
+# 2. nav 13 或 14 个锚点（=14 iff #bear-case 存在）
+check "nav 13-14 anchors" "[ \$(grep -o 'href=\"#' '$FILE' | wc -l) -ge 13 ] && [ \$(grep -o 'href=\"#' '$FILE' | wc -l) -le 14 ]"
+
+# 2.5 mermaid 块 + CDN
+check "mermaid block exists" "[ \$(grep -c 'class=\"mermaid\"' '$FILE') -ge 1 ]"
+check "mermaid.initialize present" "[ \$(grep -c 'mermaid.initialize' '$FILE') -ge 1 ]"
+check "mermaid CDN v10" "[ \$(grep -c 'mermaid@10' '$FILE') -ge 1 ]"
+check "echarts CDN v5" "[ \$(grep -c 'echarts@5\|echarts.min.js' '$FILE') -ge 1 ]"
+check "mathjax CDN v3" "[ \$(grep -c 'mathjax@3' '$FILE') -ge 1 ]"
 
 # 3. compliance banner 存在
 check "compliance banner" "[ \$(grep -c 'compliance-banner' '$FILE') -ge 1 ]"
