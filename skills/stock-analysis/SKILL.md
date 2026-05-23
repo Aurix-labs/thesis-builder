@@ -9,11 +9,8 @@ description: |
     • 持仓相关决策（"我手里的 600519 还能拿吗"、"002594 该不该止损"、"现在能买 XXX 吗"）
     • 业绩/财报/异常变动相关（"XXX 三季报怎么看"、"XXX 营收暴跌"）
     • 含糊的研究意图（"帮我看个票"、"研究下这只股票"）
-  本 skill 拆为 7 个独立模块 + 1 个合成层：
-    chain（产业链）/ rubric（质地）/ elasticity（弹性）/ risk（风险）/
-    valuation（估值）/ flow-tech（资金技术面）/ peers（同业）/ report（合成全景）
-  各模块按 TTL 复用快照（90/90/90/30/7/1/90 天），单模块只出 markdown，合成 report 才出 HTML，
-  TTL 内强制复用、--force 才重跑——这是核心特性，能省大量 token。
+    • 显式刷新意图（"重新跑下"、"强制更新"）→ 翻译为 --force
+  本 skill 模块化按 TTL 复用快照，TTL 内强制复用，--force 才重跑——这是核心成本控制。
   仅供研究参考，不构成证券投资咨询业务，不构成投资建议。
 metadata:
   argument-hint: <股票代码或公司名> [模块...] [--force]
@@ -56,21 +53,26 @@ metadata:
 | 比亚迪 质地和风险 | `/stock-analysis 002594 rubric risk` |
 | 重新跑下 002594 的估值 | `/stock-analysis 002594 valuation --force` |
 
-## 强约束
+## 强约束（含 Why）
 
-理解每条约束背后的"为什么"远比记忆规则更重要——在边界场景下，你应该根据 Why 自己判断怎么做最合理。
+理解每条约束背后的"为什么"远比记忆规则更重要——在边界场景下，根据 Why 自己判断怎么做最合理。
 
 | ID | 约束 | Why |
 |---|---|---|
 | R1 | TTL 内必须复用 latest 快照，不重新拉数据、不重新跑 LLM 分析 | 重新跑 LLM 写一遍模块 report.md 烧数万 token；用户明确说过"TTL 内有缓存就用缓存"。模块化的核心价值在于复用，不复用就退化成单文件大报告。 |
-| R2 | `--force` 是打破 R1 的唯一方式 | 避免你"想做完整一点"就自作主张重跑。只有用户口头明确说"重新跑/刷新/强制更新"才能翻译成 `--force` |
-| R3 | 合成 `report` 时各模块独立应用 R1/R2 | 用户跑全景时如果 chain/rubric/peers 的 90 天快照还新鲜就该复用；只有过期模块重跑。这样长期使用合成成本会随时间收敛到接近 0 |
-| R4 | 单模块**永不**出 HTML；HTML 仅在合成 report 时产出 | HTML 生成成本极高（6 批分写 + verify_html.sh 兜底）。单模块快照随时会被 compose 重新合并到大 HTML，单独出 HTML 是纯浪费 |
-| R5 | 模块间分析输出彼此不引用 | 如果 chain 引用了 valuation 的目标价，两边 TTL 不同步时引用会变成幽灵数据。强解耦让模块可以独立失效/刷新 |
-| R6 | 每个模块 report.md 必须以 `<!-- THESIS_SNAPSHOT_START -->` 段开头 | compose 时用正则去重"标的速写"段——只有稳定的 marker 才能可靠匹配。模块自由发挥会让 7 段速写都进合并报告 |
-| R7 | bear-case / fact-check 只在合成 report 时跑 | 这两个 sub-agent 每次烧大量 token，且其价值在跨模块视野（看完整报告里的矛盾）。单模块刷新触发它们既贵又无意义 |
-| R8 | `verify_facts --module <m>` 校验单模块；`verify_consistency` 仅 report 时跑 | 单模块 verify 只能查该模块自己的 data.json↔report.md 标签对齐；跨模块一致性（同一指标在不同 section 数值是否一致）只在合并后才有意义 |
-| R9 | `peers/<ymd>/peers.txt` 存在时 `peers --force` 复用名单（先看今日，再退回 latest） | 对标分析的可比性靠固定同业列表。每次重选会让历史对比无意义——同一公司本周对比比亚迪/长城，下周对比理想/小鹏，结论就漂了 |
+| R2 | `--force` 是打破 R1 的唯一方式 | 避免你"想做完整一点"就自作主张重跑。只有用户口头明确说"重新跑/刷新/强制更新"才能翻译成 `--force`。 |
+| R3 | 合成 `report` 时各模块独立应用 R1/R2 | 用户跑全景时如果 chain/rubric/peers 的 90 天快照还新鲜就该复用；只有过期模块重跑。这样长期使用合成成本会随时间收敛到接近 0。 |
+| R4 | 单模块**永不**出 HTML；HTML 仅在合成 report 时产出 | HTML 生成成本极高（render_html.py + verify_html.sh 兜底）。单模块快照随时会被 compose 重新合并到大 HTML，单独出 HTML 是纯浪费。 |
+| R5 | 模块间分析输出彼此不引用 | 如果 chain 引用了 valuation 的目标价，两边 TTL 不同步时引用会变成幽灵数据。强解耦让模块可以独立失效/刷新。 |
+| R6 | 每个模块 report.md 必须以 `<!-- THESIS_SNAPSHOT_START -->` 段开头 | compose 时用正则去重"标的速写"段——只有稳定的 marker 才能可靠匹配。模块自由发挥会让 7 段速写都进合并报告。 |
+| R7 | bear-case / fact-check 只在合成 report 时跑 | 这两个 sub-agent 每次烧大量 token，且其价值在跨模块视野（看完整报告里的矛盾）。单模块刷新触发它们既贵又无意义。 |
+| R8 | `verify_facts --module <m>` 校验单模块；`verify_consistency` 仅 report 时跑 | 单模块 verify 只能查该模块自己的 data.json↔report.md 标签对齐；跨模块一致性（同一指标在不同 section 数值是否一致）只在合并后才有意义。 |
+| R9 | `peers/<ymd>/peers.txt` 存在时 `peers --force` 复用名单（先看今日，再退回 latest） | 对标分析的可比性靠固定同业列表。每次重选会让历史对比无意义——同一公司本周对比比亚迪/长城，下周对比理想/小鹏，结论就漂了。 |
+| R10 | 不用 Python f-string / 字符串拼接生成 HTML markup | 转义易出错；允许 Jinja2 模板、markdown-it 转换。 |
+| R11 | 不用 Bash heredoc 写多行 HTML | EOF 易匹配失败。 |
+| R12 | `compose_report.py` 之外的脚本不调用合成层产物 | 合成是 agent 责任，脚本只产单模块。 |
+| R13 | 改 latest 软链后必须同步更新 manifest | 合成报告需可审计。 |
+| R14 | hero meta 不显示 A/B/C 字母评级 | 统一用 `Rubric: <total>/100` 口径。 |
 
 ## Agent 执行流程
 
@@ -123,26 +125,12 @@ output/
 
 ## 关键文档
 
-| 用途 | 文件 |
+| 何时读 | 文件 |
 |---|---|
-| 模块方法论 | [references/modules/](references/modules/) |
-| 数字标签规范 | [references/tag-spec.md](references/tag-spec.md) |
-| 不变量校验 schema | [references/invariants-spec.md](references/invariants-spec.md) |
-| HTML 设计规范 | [references/html-spec.md](references/html-spec.md) |
-| HTML 模板 | [templates/report.html.j2](templates/report.html.j2) |
-| HTML 渲染器 | [scripts/render_html.py](scripts/render_html.py) |
-| data.json schema | [references/data-schema.md](references/data-schema.md) |
+| 写某个模块 report.md 时 | [references/modules/\<m\>.md](references/modules/) |
+| 写 report 涉及数字时 | [references/tag-spec.md](references/tag-spec.md) |
+| 写 data.json 时 | [references/data-schema.md](references/data-schema.md) |
+| 合成 report 调 verify_consistency 前 | [references/invariants-spec.md](references/invariants-spec.md) |
+| HTML 渲染相关问题 | [references/html-spec.md](references/html-spec.md) + [templates/report.html.j2](templates/report.html.j2) + [scripts/render_html.py](scripts/render_html.py) |
+| 配置改动 | [config.yaml](config.yaml) |
 
-## 禁止事项
-
-| # | 禁止 | 原因 |
-|---|---|---|
-| 1 | Python f-string / 字符串拼接生成 HTML markup | 转义易出错。允许：Jinja2 模板、markdown-it 转换 |
-| 2 | Bash heredoc 写多行 HTML | EOF 易匹配失败 |
-| 3 | 跳过任何模块的"标的速写"段 | 破坏 compose 去重逻辑 |
-| 4 | 单模块输出 HTML | 违反 R4 |
-| 5 | 模块间分析输出互相引用 | 违反 R5（模块独立性） |
-| 6 | TTL 内未传 --force 就重新拉数据 | 违反 R1（用户已强约束） |
-| 7 | `compose_report.py` 之外的脚本调用合成层产物 | 合成是 agent 责任 |
-| 8 | 修改 latest 软链后不更新 manifest | 合成报告需可审计 |
-| 9 | hero meta 显示 A/B/C 字母评级 | 改用 `Rubric: <total>/100` |
