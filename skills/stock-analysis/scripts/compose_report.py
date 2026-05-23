@@ -12,10 +12,11 @@ import datetime as dt
 import json
 import re
 import sys
+import uuid
 from pathlib import Path
 
 from lib.config_loader import ANALYSIS_MODULES
-from lib.module_io import THESIS_SNAPSHOT_START, THESIS_SNAPSHOT_END, get_latest_ymd
+from lib.module_io import THESIS_SNAPSHOT_START, THESIS_SNAPSHOT_END, get_latest_ymd, read_module_data
 
 
 _SNAPSHOT_RE = re.compile(
@@ -37,7 +38,55 @@ def dedupe_thesis_snapshots(md: str) -> str:
     return out
 
 
-def compose(stock_dir: Path, today: str) -> dict:
+def _module_to_namespace(module: str) -> str:
+    """模块名 → data.json 顶层 namespace（连字符转下划线）。"""
+    return module.replace("-", "_")
+
+
+def _has_history_reports(stock_dir: Path, today: str) -> bool:
+    """是否存在 report/<ymd>/ 历史快照（不含 today）。"""
+    report_root = stock_dir / "report"
+    if not report_root.exists():
+        return False
+    for sub in report_root.iterdir():
+        if sub.is_dir() and sub.name != today and (sub / "report.md").exists():
+            return True
+    return False
+
+
+def merge_data_json(
+    stock_dir: Path,
+    today: str,
+    stock_code: str = "",
+    stock_name: str = "",
+) -> dict:
+    """合并 7 个模块的 latest data.json + 注入 meta。返回合并后的 dict。"""
+    merged: dict = {"meta": {}}
+    ymds: list[str] = []
+    for m in ANALYSIS_MODULES:
+        latest_ymd = get_latest_ymd(stock_dir, m)
+        if latest_ymd is None:
+            raise FileNotFoundError(f"模块 {m} 没有 latest 快照，无法合并 data.json")
+        d = read_module_data(stock_dir, m, latest_ymd)
+        ns = _module_to_namespace(m)
+        merged[ns] = d
+        ymds.append(latest_ymd)
+
+    now = dt.datetime.now()
+    merged["meta"] = {
+        "stock_code": stock_code,
+        "stock_name": stock_name,
+        "stock_dir": stock_dir.name,
+        "ymd": today,
+        "time_utc8": now.strftime("%H:%M"),
+        "session_id": "0x" + uuid.uuid4().hex[:4],
+        "data_as_of": max(ymds),
+        "research_status": "持续跟踪" if _has_history_reports(stock_dir, today) else "首次覆盖",
+    }
+    return merged
+
+
+def compose(stock_dir: Path, today: str, stock_code: str = "", stock_name: str = "") -> dict:
     """合并 7 个模块的 latest report.md。"""
     report_dir = stock_dir / "report" / today
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -62,8 +111,13 @@ def compose(stock_dir: Path, today: str) -> dict:
     manifest_path = report_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    merged_data = merge_data_json(stock_dir, today, stock_code=stock_code, stock_name=stock_name)
+    data_path = report_dir / "data.json"
+    data_path.write_text(json.dumps(merged_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
     return {
         "merged_report_md": str(merged_path),
+        "merged_data_json": str(data_path),
         "manifest": str(manifest_path),
         "pending": ["step_0_task_lock", "step_8_conclusion", "bear_case", "fact_check", "html"],
     }
@@ -85,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     from run_module import _resolve_stock
     try:
         _code, _name, stock_dir = _resolve_stock(args.code_or_name, output_root)
-        result = compose(stock_dir, today)
+        result = compose(stock_dir, today, stock_code=_code, stock_name=_name)
     except (FileNotFoundError, ValueError) as e:
         print(f"[X] {e}", file=sys.stderr)
         return 1
