@@ -91,13 +91,13 @@ metadata:
 ```
 1. 跑 python scripts/run_module.py 002594 report [--force]
 2. 对每个 needs_report_md=true 的模块，按其 references/modules/<m>.md 写 report.md
-3. 跑 python scripts/compose_report.py 002594 → merged report.md + manifest.json
+3. 跑 python scripts/compose_report.py 002594 → merged report.md + merged data.json + manifest.json
 4. 在 merged report.md 顶部插 Step 0（任务锁定）
 5. 在 merged report.md 末尾插 Step 8（综合结论 + 跟踪锚点）
 6. 跑 python scripts/verify_consistency.py --report <merged_report_md> → 0 FAIL
 7. 调 bear-case sub-agent → append 到 report.md（prompt 见 references/modules/report.md）
 8. 调 fact-check sub-agent → 写 report/<today>/fact-check.md
-9. 按 references/batch-checklist.md 分 6 批写 report/<today>/report.html
+9. 跑 python scripts/render_html.py 002594 <today> → report/<today>/report.html
 10. 跑 bash scripts/verify_html.sh report/<today>/report.html → 全 PASS
 ```
 
@@ -129,7 +129,8 @@ output/
 | 数字标签规范 | [references/tag-spec.md](references/tag-spec.md) |
 | 不变量校验 schema | [references/invariants-spec.md](references/invariants-spec.md) |
 | HTML 设计规范 | [references/html-spec.md](references/html-spec.md) |
-| HTML 分批校验清单 | [references/batch-checklist.md](references/batch-checklist.md) |
+| HTML 模板 | [templates/report.html.j2](templates/report.html.j2) |
+| HTML 渲染器 | [scripts/render_html.py](scripts/render_html.py) |
 | data.json schema | [references/data-schema.md](references/data-schema.md) |
 | v3.2 归档（仅参考） | [references/_legacy/](references/_legacy/) |
 
@@ -137,7 +138,7 @@ output/
 
 | # | 禁止 | 原因 |
 |---|---|---|
-| 1 | Python 生成 HTML markup | 转义混乱 |
+| 1 | Python f-string / 字符串拼接生成 HTML markup | 转义易出错。允许：Jinja2 模板、markdown-it 转换 |
 | 2 | Bash heredoc 写多行 HTML | EOF 易匹配失败 |
 | 3 | 跳过任何模块的"标的速写"段 | 破坏 compose 去重逻辑 |
 | 4 | 单模块输出 HTML | 违反 R4 |
@@ -145,5 +146,5 @@ output/
 | 6 | TTL 内未传 --force 就重新拉数据 | 违反 R1（用户已强约束） |
 | 7 | `compose_report.py` 之外的脚本调用合成层产物 | 合成是 agent 责任 |
 | 8 | 修改 latest 软链后不更新 manifest | 合成报告需可审计 |
-| 9 | 一次性写完整 HTML | 必须分 6 批 |
+| 9 | ~~一次性写完整 HTML~~ | v5 起 HTML 由 render_html.py 一次产出，本条作废 |
 | 10 | hero meta 显示 A/B/C 字母评级 | v3.1 起改用 `Rubric: <total>/100` |
