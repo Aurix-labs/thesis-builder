@@ -54,24 +54,28 @@
 
 筛选标准：**能否给具体公司带来真实业绩？** 不能则标注为"仅题材"。
 
-#### 2b. 产业链图谱（必做，ASCII 树形图）
+#### 2b. 产业链图（必做，Mermaid flowchart）
 
+LLM 必须在 report.md 的 `### 2b. 产业链图` 段落里放一个 ```` ```mermaid ```` fenced block，由 render_html.py 透传渲染。
+
+**模板：**
+
+```mermaid
+flowchart LR
+  U["上游<br/>关键原材料·包材"]
+  M["本公司<br/>核心业务·毛利率 XX%"]:::core
+  D["下游<br/>主要应用场景·终端"]
+  U --> M --> D
+  classDef core stroke:#5e6ad2,stroke-width:1.5px
 ```
-产业方向：XXX
-├── 上游（原材料/基础设施）
-│   ├── 子项1 → 对公司影响
-│   └── 子项2
-├── 中游（产品/平台/解决方案）← 公司所在位置
-│   ├── 业务线A（营收占比XX%，毛利率XX%）
-│   ├── 业务线B
-│   └── 业务线C
-├── 下游（应用行业/客户）
-│   ├── 客户A（占营收XX%）
-│   └── 客户B
-└── 关键判断
-    ├── 判断1
-    └── 判断2
-```
+
+**要求：**
+- 节点 ≤ 5 个（保持卡片可读性）
+- 必有 `M["..."]:::core`（本公司节点带 lavender 强调）
+- 多业务公司：可在 M 节点拆出 M1/M2，仍用 `:::core` 标记
+- 文字必须含关键数据（毛利率 / 营收占比），不允许只写标签
+
+如需在 ASCII 形式做"深度树"（业务细节），放在 `### 2b-detail. 产业链 ASCII 树` 子段。`### 2b.` 段必须以 mermaid 块结尾，便于切段。
 
 #### 2c. 业务线拆解与趋势三要素（必做）
 
@@ -113,8 +117,16 @@
 - 核心矛盾：XX vs YY（一句话） [I:]
 
 ## Step 2 · 产业链拆解
-### 产业链 ASCII 图
-（按 _legacy 模板）
+### 产业链图
+
+```mermaid
+flowchart LR
+  U["上游<br/>...."]
+  M["本公司<br/>..."]:::core
+  D["下游<br/>...."]
+  U --> M --> D
+  classDef core stroke:#5e6ad2,stroke-width:1.5px
+```
 
 ### 趋势三要素
 | 要素 | 确认 | 数据 |
@@ -131,4 +143,32 @@
 | 上游 |  |  |  |
 | 中游（公司所在） |  |  |  |
 | 下游 |  |  |  |
+```
+
+## summary 必填字段（chain/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "industry_phase": "复苏前期 | 复苏中 | 复苏后期 | 震荡",
+    "thesis_one_liner": "一句话核心矛盾（< 30 字，HTML hero lead 用）"
+  }
+}
+```
+
+要求：
+- `industry_phase` 必须是上述四个枚举之一
+- `thesis_one_liner` 简洁，HTML hero 区域直接渲染，避免标签污染（不带 `[I:]` / `[T:]`）
+
+写法（伪代码）：
+
+```python
+data = json.loads(data_json_path.read_text())
+data["summary"] = {
+    "industry_phase": "复苏中",
+    "thesis_one_liner": "新能源整车规模化 + 电池外供放量的双轮模型",
+}
+data_json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
 ```
