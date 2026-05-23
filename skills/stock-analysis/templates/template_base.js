@@ -6,9 +6,9 @@
 (function () {
   'use strict';
 
-  // ⚠ 数据注入点：Phase 3 写 HTML 时把 __RAW_DATA_ARRAY__ 替换为实际数组
-  const rawData = __RAW_DATA_ARRAY__;
-  const pieData = __PIE_DATA_ARRAY__;
+  // 数据注入点：render_html.py 通过 Jinja2 注入实际数组（v5 起）
+  const rawData = {{ kline_echarts_data | tojson }};
+  const pieData = {{ pie_data | tojson }};
 
   // ============================================================
   //  色板（与 template_base.css 一致）
