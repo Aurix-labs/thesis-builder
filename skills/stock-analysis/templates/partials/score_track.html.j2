@@ -1,0 +1,17 @@
+{#-
+  6 维评分条。inputs:
+    rubric.summary.dimensions: [{name, points_max, points_got}] (恰好 6 条)
+
+  每行 5 段 lit/dim，lit 数 = round(points_got / points_max * 5)
+-#}
+{% for d in rubric.summary.dimensions %}
+{% set lit_count = ((d.points_got / d.points_max) * 5) | round(0, 'common') | int %}
+<div class="score-row">
+  <div class="k">{{ d.name }}（{{ d.points_max }}）</div>
+  <div class="score-track">
+    {% for i in range(5) %}<div class="score-seg {% if i < lit_count %}lit{% else %}dim{% endif %}"></div>
+    {% endfor %}
+  </div>
+  <div class="pts">{{ d.points_got }}/{{ d.points_max }}</div>
+</div>
+{% endfor %}

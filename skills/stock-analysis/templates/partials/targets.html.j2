@@ -1,0 +1,19 @@
+{#-
+  三档目标价。inputs:
+    valuation.summary.targets: {short, mid, long, mid_change_pct, base_date}
+-#}
+<div class="targets-row">
+  <div class="t-cell">
+    <div class="k">SHORT-TERM</div>
+    <div class="v">¥{{ "%.2f"|format(valuation.summary.targets.short) }}</div>
+  </div>
+  <div class="t-cell">
+    <div class="k">MID-TERM</div>
+    <div class="v target-mid">¥{{ "%.2f"|format(valuation.summary.targets.mid) }} <span class="chg">↗ {{ "%+.1f"|format(valuation.summary.targets.mid_change_pct) }}%</span></div>
+  </div>
+  <div class="t-cell">
+    <div class="k">LONG-TERM</div>
+    <div class="v">¥{{ "%.2f"|format(valuation.summary.targets.long) }}</div>
+  </div>
+</div>
+<p class="t-footnote">基于 {{ valuation.summary.targets.base_date }} 收盘价</p>

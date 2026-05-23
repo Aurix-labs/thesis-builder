@@ -1,0 +1,27 @@
+{#-
+  Hero sparkline inline SVG。inputs:
+    sparkline_points: list[float] (近 30 个收盘价，由 render_html.py 从 kline_daily 抽取)
+    sparkline_direction: "up" | "down"  (由 render_html.py 计算：最后一个相对第一个)
+
+  把价格归一化到 0..50 y 轴，平均铺在 220 宽。
+-#}
+{% set n = sparkline_points | length %}
+{% set vmin = sparkline_points | min %}
+{% set vmax = sparkline_points | max %}
+{% set vrange = (vmax - vmin) if (vmax > vmin) else 1.0 %}
+{% set stroke = "#27a644" if sparkline_direction == "up" else "#ff5a5f" %}
+{% set fill_color = "#27a644" if sparkline_direction == "up" else "#ff5a5f" %}
+<svg width="220" height="50" viewBox="0 0 220 50">
+  <defs><linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+    <stop offset="0" stop-color="{{ fill_color }}" stop-opacity="0.4"/>
+    <stop offset="1" stop-color="{{ fill_color }}" stop-opacity="0"/>
+  </linearGradient></defs>
+  {%- set pts = [] %}
+  {%- for v in sparkline_points %}
+    {%- set x = (loop.index0 / (n - 1) * 220) if n > 1 else 0 %}
+    {%- set y = 50 - ((v - vmin) / vrange * 40) - 5 %}
+    {%- set _ = pts.append("%d,%d"|format(x|round|int, y|round|int)) %}
+  {%- endfor %}
+  <polyline points="{{ pts | join(' ') }}" stroke="{{ stroke }}" stroke-width="1.5" fill="none"/>
+  <polyline points="{{ pts | join(' ') }} 220,50 0,50" fill="url(#g1)" stroke="none"/>
+</svg>

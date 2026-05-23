@@ -1,0 +1,29 @@
+{#-
+  Meta row 4 列。inputs from merged data.json:
+    rubric.summary.total, rubric.summary.passed,
+    valuation.summary.targets.{mid, mid_change_pct, short, long},
+    valuation.summary.rr,
+    risk.summary.level
+-#}
+<div class="meta-row">
+  <div class="hero-meta-item">
+    <div class="k">Rubric</div>
+    <div class="v">{{ rubric.summary.total }}/100</div>
+    <div class="sub">{{ rubric.summary.passed }}/20 ✓</div>
+  </div>
+  <div class="hero-meta-item">
+    <div class="k">Target / mid</div>
+    <div class="v target-mid">¥{{ "%.2f"|format(valuation.summary.targets.mid) }}</div>
+    <div class="sub">{{ "%+.1f"|format(valuation.summary.targets.mid_change_pct) }}% upside</div>
+  </div>
+  <div class="hero-meta-item">
+    <div class="k">R / R</div>
+    <div class="v">{{ "%.1f"|format(valuation.summary.rr) }}</div>
+    <div class="sub">¥{{ "%.0f"|format(valuation.summary.targets.short) }} ↔ ¥{{ "%.0f"|format(valuation.summary.targets.mid) }} ↔ ¥{{ "%.0f"|format(valuation.summary.targets.long) }}</div>
+  </div>
+  <div class="hero-meta-item">
+    <div class="k">Risk</div>
+    <div class="v">{{ risk.summary.level }}</div>
+    <div class="sub">见 #risk 卡</div>
+  </div>
+</div>

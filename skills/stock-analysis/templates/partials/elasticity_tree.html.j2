@@ -1,0 +1,17 @@
+{#-
+  弹性树（与现有 .tree-children flex 渲染对齐）。inputs:
+    elasticity.summary.tree_children: [{name, ratio, margin, factor, is_core}]
+-#}
+<div style="text-align:center;margin:16px 0;">
+  <div class="tree-top">归母净利弹性来源</div>
+  <div class="tree-line-v"></div>
+  <div class="tree-line-h"></div>
+</div>
+<div class="tree-children">
+  {% for c in elasticity.summary.tree_children %}
+  <div class="tree-child{% if c.is_core %} core{% endif %}">
+    <div class="name">{{ c.name }}</div>
+    <div class="nums">占比 {{ c.ratio }} · 毛利 {{ c.margin }} · 弹性 {{ c.factor }}</div>
+  </div>
+  {% endfor %}
+</div>

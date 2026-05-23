@@ -1,0 +1,20 @@
+{#-
+  财务表。inputs:
+    rubric.summary.financials_table: [{year, revenue, net_profit, gross_margin, roe}]
+-#}
+<table class="financial-table">
+  <thead>
+    <tr><th>年份</th><th>营收（亿）</th><th>归母（亿）</th><th>毛利率</th><th>ROE</th></tr>
+  </thead>
+  <tbody>
+    {% for row in rubric.summary.financials_table %}
+    <tr>
+      <td>{{ row.year }}</td>
+      <td>{{ "%.2f"|format(row.revenue) }}</td>
+      <td>{{ "%.2f"|format(row.net_profit) }}</td>
+      <td>{{ "%.2f"|format(row.gross_margin * 100) }}%</td>
+      <td>{{ "%.2f"|format(row.roe * 100) }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
