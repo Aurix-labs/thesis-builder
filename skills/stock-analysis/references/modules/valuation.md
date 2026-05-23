@@ -169,3 +169,30 @@
 
 ### 6f-6i：框架原则对照 / 买卖时机 / 预期差 / 风格标签
 ```
+
+## summary 必填字段（valuation/<ymd>/data.json）
+
+LLM 在写 report.md **之前**，必须把以下字段写回 `<ymd>/data.json` 的 `summary` 子键：
+
+```json
+{
+  "summary": {
+    "targets": {
+      "short": 230.0,
+      "mid": 290.0,
+      "long": 350.0,
+      "mid_change_pct": 15.9,
+      "base_date": "2026-05-15"
+    },
+    "rr": 2.8
+  }
+}
+```
+
+**约束**：
+
+- `targets.short/mid/long` 单位：元 / 股，浮点
+- `targets.mid_change_pct` = (mid - 现价) / 现价 × 100，正负皆可
+- `targets.base_date` = 估值基准日（通常 = data_as_of）
+- `rr` = 盈亏比 = (向上空间 ÷ 向下空间)，至少保留 1 位小数
+- 与 6d 表格、hero meta-row 严格一致，差异由 verify_consistency.py 兜底
