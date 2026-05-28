@@ -22,6 +22,13 @@ def _row_date(row: dict) -> str:
     return str(row.get("日期") or row.get("date") or "")[:10]
 
 
+def _pick(row: dict, *keys: str) -> Any:
+    for key in keys:
+        if key in row and row.get(key) is not None:
+            return row.get(key)
+    return None
+
+
 def _sorted_daily_rows(rows: list[dict], today: str) -> list[dict]:
     return sorted(
         [row for row in rows if _row_date(row) and _row_date(row) <= today],
@@ -30,9 +37,7 @@ def _sorted_daily_rows(rows: list[dict], today: str) -> list[dict]:
 
 
 def _close(row: dict) -> float | None:
-    if "收盘" in row:
-        return to_float(row.get("收盘"))
-    return to_float(row.get("close"))
+    return to_float(_pick(row, "收盘", "close"))
 
 
 def _daily_summary(rows: list[dict]) -> dict:
@@ -40,19 +45,19 @@ def _daily_summary(rows: list[dict]) -> dict:
     prev = rows[-2] if len(rows) >= 2 else {}
     close = _close(last)
     prev_close = _close(prev)
-    volume = to_float(last.get("成交量") or last.get("volume"))
-    amount = to_float(last.get("成交额") or last.get("amount"))
+    volume = to_float(_pick(last, "成交量", "volume"))
+    amount = to_float(_pick(last, "成交额", "amount"))
     return {
         "date": str(last.get("日期") or last.get("date"))[:10],
-        "open": to_float(last.get("开盘") or last.get("open")),
-        "high": to_float(last.get("最高") or last.get("high")),
-        "low": to_float(last.get("最低") or last.get("low")),
+        "open": to_float(_pick(last, "开盘", "open")),
+        "high": to_float(_pick(last, "最高", "high")),
+        "low": to_float(_pick(last, "最低", "low")),
         "close": close,
         "prev_close": prev_close,
         "change_pct": pct_change(close, prev_close),
         "volume": volume,
         "amount": amount,
-        "turnover": to_float(last.get("换手率") or last.get("turnover")),
+        "turnover": to_float(_pick(last, "换手率", "turnover")),
     }
 
 

@@ -17,6 +17,13 @@ def _row_date(row: dict) -> str:
     return str(row.get("date") or row.get("日期") or "")[:10]
 
 
+def _pick(row: dict, *keys: str) -> Any:
+    for key in keys:
+        if key in row and row.get(key) is not None:
+            return row.get(key)
+    return None
+
+
 def _index_summary(rows: list[dict], code: str, name: str, trade_date: str) -> dict:
     usable = sorted(
         [row for row in rows if _row_date(row) and _row_date(row) <= trade_date],
@@ -27,16 +34,16 @@ def _index_summary(rows: list[dict], code: str, name: str, trade_date: str) -> d
 
     last = usable[-1]
     prev = usable[-2] if len(usable) >= 2 else {}
-    close = to_float(last.get("close") or last.get("收盘"))
-    prev_close = to_float(prev.get("close") or prev.get("收盘"))
+    close = to_float(_pick(last, "close", "收盘"))
+    prev_close = to_float(_pick(prev, "close", "收盘"))
     return {
         "code": code,
         "name": name,
         "date": _row_date(last),
         "close": close,
         "change_pct": pct_change(close, prev_close),
-        "amount": to_float(last.get("amount") or last.get("成交额")),
-        "volume": to_float(last.get("volume") or last.get("成交量")),
+        "amount": to_float(_pick(last, "amount", "成交额")),
+        "volume": to_float(_pick(last, "volume", "成交量")),
     }
 
 

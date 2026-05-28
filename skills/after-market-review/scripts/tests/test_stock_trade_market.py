@@ -82,6 +82,33 @@ class FakeStockAkshareUnsortedDaily(FakeStockAkshare):
         ]
 
 
+class FakeStockAkshareZeroFields(FakeStockAkshare):
+    def stock_zh_a_hist(self, *, symbol, period, start_date, end_date, adjust):
+        return [
+            {
+                "日期": "2026-05-27",
+                "收盘": "100",
+            },
+            {
+                "日期": "2026-05-28",
+                "开盘": 0,
+                "open": 999,
+                "最高": 0,
+                "high": 999,
+                "最低": 0,
+                "low": 999,
+                "收盘": 0,
+                "close": 999,
+                "成交量": 0,
+                "volume": 999,
+                "成交额": 0,
+                "amount": 999,
+                "换手率": 0,
+                "turnover": 999,
+            },
+        ]
+
+
 def test_stock_trade_fetch_returns_daily_and_intraday_facts():
     out = fetch_stock_trade("002594", "2026-05-28", akshare_module=FakeStockAkshare())
 
@@ -113,6 +140,19 @@ def test_stock_trade_sorts_daily_rows_before_summary_and_recent_daily():
     assert out["data"]["daily"]["date"] == "2026-05-28"
     assert out["data"]["daily"]["prev_close"] == 100
     assert [row["日期"] for row in out["data"]["recent_daily"]] == ["2026-05-27", "2026-05-28"]
+
+
+def test_stock_trade_daily_summary_preserves_zero_fields():
+    out = fetch_stock_trade("002594", "2026-05-28", akshare_module=FakeStockAkshareZeroFields())
+
+    assert out["status"] == "ok"
+    assert out["data"]["daily"]["open"] == 0
+    assert out["data"]["daily"]["high"] == 0
+    assert out["data"]["daily"]["low"] == 0
+    assert out["data"]["daily"]["close"] == 0
+    assert out["data"]["daily"]["volume"] == 0
+    assert out["data"]["daily"]["amount"] == 0
+    assert out["data"]["daily"]["turnover"] == 0
 
 
 def test_intraday_pattern_detects_basic_shapes():
@@ -211,3 +251,27 @@ def test_index_summary_sorts_rows_before_selecting_latest_and_previous():
     assert out["date"] == "2026-05-28"
     assert out["close"] == 3060
     assert out["change_pct"] == 2
+
+
+def test_index_summary_preserves_zero_fields():
+    out = _index_summary(
+        [
+            {"date": "2026-05-27", "close": 100},
+            {
+                "date": "2026-05-28",
+                "close": 0,
+                "收盘": 999,
+                "amount": 0,
+                "成交额": 999,
+                "volume": 0,
+                "成交量": 999,
+            },
+        ],
+        "sh000001",
+        "上证指数",
+        "2026-05-28",
+    )
+
+    assert out["close"] == 0
+    assert out["amount"] == 0
+    assert out["volume"] == 0
