@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from lib.status import PARTIAL, UNAVAILABLE, layer_result
+from lib.stock_resolver import detect_market
 
 
 def _records(df_or_rows: Any) -> list[dict]:
@@ -21,6 +22,15 @@ def _row_code(row: dict) -> str:
 
 def _filter_code(rows: list[dict], code: str) -> list[dict]:
     return [row for row in rows if _row_code(row) == code]
+
+
+def _em_prefixed_symbol(code: str) -> str:
+    market = detect_market(code)
+    if market == "sh":
+        return f"SH{code}"
+    if market == "sz":
+        return f"SZ{code}"
+    return f"{market.upper()}{code}"
 
 
 def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict:
@@ -42,7 +52,9 @@ def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict
             errors.append(f"stock_hot_rank_em failed: {exc}")
 
         try:
-            hot_keywords = _records(akshare_module.stock_hot_keyword_em(symbol=code))
+            hot_keywords = _records(
+                akshare_module.stock_hot_keyword_em(symbol=_em_prefixed_symbol(code))
+            )
         except Exception as exc:
             errors.append(f"stock_hot_keyword_em failed: {exc}")
 

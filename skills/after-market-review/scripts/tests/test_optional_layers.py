@@ -151,7 +151,7 @@ class FakeSentimentAkshare:
         return [{"代码": "002594", "排名": 3}, {"代码": "000001", "排名": 4}]
 
     def stock_hot_keyword_em(self, *, symbol):
-        assert symbol == "002594"
+        assert symbol == "SZ002594"
         return [{"关键词": "新能源"}]
 
     def stock_lhb_detail_daily_sina(self, *, date):
@@ -183,6 +183,28 @@ def test_sentiment_fetch_respects_toggles_and_filters_by_code():
     assert out["data"]["hot_rank"] == [{"代码": "002594", "排名": 3}]
     assert out["data"]["hot_keywords"] == [{"关键词": "新能源"}]
     assert out["data"]["lhb"] == [{"股票代码": "002594", "营业部": "机构专用"}]
+
+
+class FakeSentimentShanghaiAkshare:
+    def stock_hot_rank_em(self):
+        return []
+
+    def stock_hot_keyword_em(self, *, symbol):
+        assert symbol == "SH600519"
+        return [{"关键词": "白酒"}]
+
+
+def test_sentiment_fetch_uses_shanghai_prefixed_keyword_symbol():
+    out = fetch_sentiment(
+        "600519",
+        "2026-05-28",
+        {"sources": {"enable_sentiment": True, "enable_lhb": False}},
+        akshare_module=FakeSentimentShanghaiAkshare(),
+    )
+
+    assert out["status"] == "partial"
+    assert out["errors"] == []
+    assert out["data"]["hot_keywords"] == [{"关键词": "白酒"}]
 
 
 def test_sentiment_fetch_unavailable_when_disabled_without_errors():
