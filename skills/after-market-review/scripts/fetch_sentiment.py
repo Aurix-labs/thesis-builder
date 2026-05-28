@@ -32,8 +32,8 @@ def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict
     enable_lhb = bool(sources.get("enable_lhb", True))
     errors: list[str] = []
     hot_rank: list[dict] = []
-    hot_keyword: list[dict] = []
-    lhb_daily: list[dict] = []
+    hot_keywords: list[dict] = []
+    lhb: list[dict] = []
 
     if enable_sentiment:
         try:
@@ -42,17 +42,19 @@ def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict
             errors.append(f"stock_hot_rank_em failed: {exc}")
 
         try:
-            hot_keyword = _records(akshare_module.stock_hot_keyword_em(symbol=code))
+            hot_keywords = _records(akshare_module.stock_hot_keyword_em(symbol=code))
         except Exception as exc:
             errors.append(f"stock_hot_keyword_em failed: {exc}")
 
     if enable_lhb:
         try:
-            lhb_rows = _records(akshare_module.stock_lhb_detail_daily_sina(date=trade_date))
-            lhb_daily = _filter_code(lhb_rows, code)
+            lhb_rows = _records(
+                akshare_module.stock_lhb_detail_daily_sina(date=trade_date.replace("-", ""))
+            )
+            lhb = _filter_code(lhb_rows, code)
         except Exception as exc:
             errors.append(f"stock_lhb_detail_daily_sina failed: {exc}")
 
-    data = {"hot_rank": hot_rank, "hot_keyword": hot_keyword, "lhb_daily": lhb_daily}
-    status = PARTIAL if hot_rank or hot_keyword or lhb_daily else UNAVAILABLE
+    data = {"hot_rank": hot_rank, "hot_keywords": hot_keywords, "lhb": lhb}
+    status = PARTIAL if hot_rank or hot_keywords or lhb else UNAVAILABLE
     return layer_result(status, data, errors)

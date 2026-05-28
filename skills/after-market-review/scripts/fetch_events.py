@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
-from lib.status import PARTIAL, UNAVAILABLE, layer_result
+from lib.status import OK, PARTIAL, UNAVAILABLE, layer_result
 
 
 def _records(df_or_rows: Any) -> list[dict]:
@@ -72,5 +72,6 @@ def fetch(code: str, name: str, trade_date: str, cfg: dict, *, akshare_module=No
         "verified_driver": [],
         "unsupported_rumor": [],
     }
-    status = PARTIAL if raw_news else UNAVAILABLE
-    return layer_result(status, data, errors)
+    if raw_news:
+        return layer_result(PARTIAL if errors else OK, data, errors)
+    return layer_result(UNAVAILABLE, data, errors)

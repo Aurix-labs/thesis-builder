@@ -124,7 +124,7 @@ def test_events_fetch_filters_news_by_trade_date_and_caps_catalysts():
         akshare_module=FakeEventsAkshare(),
     )
 
-    assert out["status"] == "partial"
+    assert out["status"] == "ok"
     assert out["errors"] == []
     assert [row["新闻标题"] for row in out["data"]["raw_news"]] == ["当日新闻"]
     assert out["data"]["possible_catalyst"] == [{"发布时间": "2026-05-28 15:01:00", "新闻标题": "当日新闻"}]
@@ -155,7 +155,7 @@ class FakeSentimentAkshare:
         return [{"关键词": "新能源"}]
 
     def stock_lhb_detail_daily_sina(self, *, date):
-        assert date == "2026-05-28"
+        assert date == "20260528"
         return [{"股票代码": "002594", "营业部": "机构专用"}, {"股票代码": "000001", "营业部": "其他"}]
 
 
@@ -181,8 +181,8 @@ def test_sentiment_fetch_respects_toggles_and_filters_by_code():
     assert out["status"] == "partial"
     assert out["errors"] == []
     assert out["data"]["hot_rank"] == [{"代码": "002594", "排名": 3}]
-    assert out["data"]["hot_keyword"] == [{"关键词": "新能源"}]
-    assert out["data"]["lhb_daily"] == [{"股票代码": "002594", "营业部": "机构专用"}]
+    assert out["data"]["hot_keywords"] == [{"关键词": "新能源"}]
+    assert out["data"]["lhb"] == [{"股票代码": "002594", "营业部": "机构专用"}]
 
 
 def test_sentiment_fetch_unavailable_when_disabled_without_errors():
@@ -194,5 +194,5 @@ def test_sentiment_fetch_unavailable_when_disabled_without_errors():
     )
 
     assert out["status"] == "unavailable"
-    assert out["data"] == {"hot_rank": [], "hot_keyword": [], "lhb_daily": []}
+    assert out["data"] == {"hot_rank": [], "hot_keywords": [], "lhb": []}
     assert out["errors"] == []
