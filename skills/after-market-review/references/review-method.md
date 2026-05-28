@@ -46,7 +46,7 @@ Forbidden wording:
 Evidence rules:
 
 1. `stock_trade` is mandatory. If it is missing, do not write the report.
-2. `tick_trade` may explain big-order behavior only when its status is `ok` or `partial`.
+2. `tick_trade` may explain big-order behavior only when `data_status.tick_trade` is `ok` or `partial`.
 3. `event_context` must distinguish `verified_driver`, `possible_catalyst`, and `unsupported_rumor`.
 4. `sentiment_context` can support short-term emotion, but it cannot be the only reason for the main conclusion.
 5. If evidence conflicts, say so directly.

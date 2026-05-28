@@ -30,7 +30,7 @@ Top-level required fields:
 | `unavailable` | Source returned no data or does not support the request |
 | `error` | Fetch or normalization failed; see `manifest.json.errors` |
 
-`tick_trade.summary` required fields when `tick_trade` is `ok` or `partial`:
+`tick_trade.summary` required fields when `data_status.tick_trade` is `ok` or `partial`:
 
 | Field | Type |
 |---|---|

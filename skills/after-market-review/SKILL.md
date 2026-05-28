@@ -52,7 +52,7 @@ metadata:
 
 2. 解析 stdout JSON：
    - `status=reuse`：直接读取并返回 `report_md`。
-   - `status=data_ready`：读取 `data_json`、`manifest_json`、`references/review-method.md`，写 `report_md`。
+   - `status=data_ready`：读取 `data_json`、`manifest_json`、`../references/review-method.md`，写 `report_md`。
    - `status=error`：读取 `manifest_json` 中的错误并向用户说明。
 
 3. 写 `report.md` 后，返回报告摘要和文件路径。
