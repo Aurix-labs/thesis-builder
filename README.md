@@ -1,7 +1,7 @@
 # thesis-builder
 
 一个 Claude / Cursor / Codex / OpenCode 等 AI agent 通用的 **投资研究 skill 集合**。
-首批包含 `stock-analysis` —— A 股个股深度研究系统。
+当前包含 `stock-analysis`（A 股个股深度研究系统）和 `after-market-review`（A 股单股盘后复盘系统）。
 
 > 本工具仅供研究参考，不构成证券投资咨询业务，不构成投资建议。投资有风险，决策需谨慎。
 
@@ -14,9 +14,11 @@
 ```bash
 # 全局安装（投放到所有支持的 agent）
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis -g
+npx skills add Aurix-labs/thesis-builder --skill after-market-review -g
 
 # 仅本项目
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis
+npx skills add Aurix-labs/thesis-builder --skill after-market-review
 
 # 安装到指定 agent
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis -a claude-code
@@ -30,6 +32,7 @@ CLI 自动按 agent 投放到正确位置：Claude Code → `~/.claude/skills/st
 ```bash
 git clone https://github.com/Aurix-labs/thesis-builder
 cp -r thesis-builder/skills/stock-analysis ~/.claude/skills/
+cp -r thesis-builder/skills/after-market-review ~/.claude/skills/
 ```
 
 ---
