@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import datetime as dt
+import math
 from typing import Any
 
 from lib.normalize import bucket_time, to_float
@@ -18,6 +20,13 @@ def _kind_side(kind: Any) -> str:
 
 def _row_time(row: dict) -> str:
     return str(row.get("ticktime") or row.get("成交时间") or row.get("时间") or "")[:8]
+
+
+def _parse_time(time_text: str) -> dt.time | None:
+    try:
+        return dt.datetime.strptime(time_text[:8], "%H:%M:%S").time()
+    except ValueError:
+        return None
 
 
 def _first_present(row: dict, keys: tuple[str, ...]) -> Any:
@@ -42,7 +51,15 @@ def _row_amount(row: dict) -> float:
 def _filter_call_auction(rows: list[dict], include_call_auction: bool) -> list[dict]:
     if include_call_auction:
         return rows
-    return [row for row in rows if _row_time(row) >= "09:30:00"]
+
+    start = dt.time(hour=9, minute=30)
+    end = dt.time(hour=14, minute=57)
+    filtered: list[dict] = []
+    for row in rows:
+        parsed = _parse_time(_row_time(row))
+        if parsed is not None and start <= parsed < end:
+            filtered.append(row)
+    return filtered
 
 
 def analyze_tick_rows(rows: list[dict], cfg: dict) -> dict:
@@ -72,10 +89,10 @@ def analyze_tick_rows(rows: list[dict], cfg: dict) -> dict:
             "large_orders_sample": [],
         }
 
-    amounts = sorted(item["amount"] for item in enriched)
+    amounts = [item["amount"] for item in enriched]
     quantile = float(cfg.get("top_quantile", 0.95))
-    threshold_index = max(0, min(len(amounts) - 1, int(len(amounts) * quantile) - 1))
-    quantile_threshold = amounts[threshold_index]
+    top_count = max(1, math.ceil(len(amounts) * (1 - quantile) - 1e-12))
+    quantile_threshold = sorted(amounts, reverse=True)[top_count - 1]
     amount_min = float(cfg.get("amount_min", 1_000_000))
     large_orders = [
         item
@@ -150,7 +167,14 @@ def _records(df_or_rows: Any) -> list[dict]:
     return list(df_or_rows or [])
 
 
-def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict:
+def fetch(
+    code: str,
+    trade_date: str,
+    cfg: dict,
+    *,
+    akshare_module=None,
+    allow_latest_fallback: bool = False,
+) -> dict:
     if akshare_module is None:
         import akshare as akshare_module
 
@@ -167,12 +191,15 @@ def fetch(code: str, trade_date: str, cfg: dict, *, akshare_module=None) -> dict
     except Exception as exc:
         errors.append(f"stock_intraday_sina failed: {exc}")
 
-    if not rows:
+    if not rows and allow_latest_fallback:
         try:
             df = akshare_module.stock_zh_a_tick_tx_js(symbol=symbol)
             rows = _records(df)
         except Exception as exc:
             errors.append(f"stock_zh_a_tick_tx_js failed: {exc}")
+
+    if not rows and not allow_latest_fallback:
+        errors.append("latest-only fallback disabled for date safety")
 
     if not rows:
         return layer_result(UNAVAILABLE, {"summary": analyze_tick_rows([], cfg)["summary"]}, errors)
