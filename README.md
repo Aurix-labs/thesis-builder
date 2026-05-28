@@ -36,6 +36,10 @@ cp -r thesis-builder/skills/stock-analysis ~/.claude/skills/
 
 ## 当前 Skills
 
+### after-market-review · 盘后复盘
+
+A 股单股盘后复盘系统，独立于 `stock-analysis`。默认对最近一个已收盘交易日做复盘，读取市场、板块、个股分时、分笔大单、资金、新闻公告与情绪线索，输出 Markdown 报告和结构化 `data.json`。第一版只给次日观察点，不给交易计划。
+
 ### stock-analysis · v4.0（模块化）
 
 A 股个股深度研究系统，原始 Step 0-8 框架拆为 **7 个独立分析模块 + 1 个合成层**，每个模块按内容变化频率独立 TTL 复用快照，让用户按需调用单一维度而不必每次跑全套。
