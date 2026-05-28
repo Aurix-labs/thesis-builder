@@ -41,20 +41,59 @@ def _fetch_name(code: str, akshare_module: Any | None) -> str | None:
     return None
 
 
+def _ambiguity_error(query: str, candidates: list[Path]) -> ValueError:
+    candidate_names = ", ".join(sub.name for sub in candidates)
+    return ValueError(
+        f"ambiguous stock lookup for {query!r}: {candidate_names}; "
+        "please use a 6-digit code"
+    )
+
+
+def _code_from_name_dir(dir_name: str, name: str) -> str | None:
+    prefix = f"{name}_"
+    if not dir_name.startswith(prefix):
+        return None
+    code = dir_name[len(prefix) :]
+    if code.isdigit() and len(code) == 6:
+        return code
+    return None
+
+
 def resolve_from_output(code_or_name: str, output_root: Path) -> tuple[str, str, Path]:
     if code_or_name.isdigit() and len(code_or_name) == 6:
         code = code_or_name
         if output_root.exists():
-            for sub in output_root.iterdir():
-                if sub.is_dir() and sub.name.endswith(f"_{code}"):
-                    return code, sub.name[: -(len(code) + 1)], sub
+            matches = sorted(
+                (
+                    sub
+                    for sub in output_root.iterdir()
+                    if sub.is_dir() and sub.name.endswith(f"_{code}")
+                ),
+                key=lambda path: path.name,
+            )
+            if len(matches) > 1:
+                raise _ambiguity_error(code, matches)
+            if len(matches) == 1:
+                sub = matches[0]
+                return code, sub.name[: -(len(code) + 1)], sub
         return code, code, output_root / f"{code}_{code}"
 
     name = code_or_name
     if output_root.exists():
-        for sub in output_root.iterdir():
-            if sub.is_dir() and sub.name.startswith(f"{name}_"):
-                code = sub.name.split("_", 1)[1]
+        matches = sorted(
+            (
+                sub
+                for sub in output_root.iterdir()
+                if sub.is_dir() and _code_from_name_dir(sub.name, name) is not None
+            ),
+            key=lambda path: path.name,
+        )
+        if len(matches) > 1:
+            raise _ambiguity_error(name, matches)
+        if len(matches) == 1:
+            sub = matches[0]
+            code = _code_from_name_dir(sub.name, name)
+            if code is not None:
                 return code, name, sub
     raise ValueError(f"公司名 {name!r} 未在 output/ 下找到对应目录；请先用 6 位代码调用一次")
 
