@@ -86,6 +86,7 @@ def build_artifacts(
         "force": force,
         "sources": sources,
         "errors": errors,
+        # This script only generates fact artifacts; the agent may add report.md later.
         "generated_files": ["data.json", "manifest.json"],
     }
     return data, manifest
@@ -116,7 +117,7 @@ def _import_fetchers() -> dict[str, Any]:
 
 
 def _default_output_root() -> Path:
-    return Path(__file__).resolve().parents[2] / "output"
+    return Path(__file__).resolve().parents[3] / "output"
 
 
 def _print_reuse(code: str, name: str, trade_date: str, out_dir: Path) -> None:
@@ -139,14 +140,19 @@ def main(argv: list[str] | None = None) -> int:
     today = args.today or dt.date.today().isoformat()
     output_root = Path(args.output_dir) if args.output_dir else _default_output_root()
 
-    code, name, stock_dir = resolve_stock(args.code_or_name, output_root)
+    try:
+        code, name, stock_dir = resolve_stock(args.code_or_name, output_root)
+    except Exception as exc:
+        _print(
+            {
+                "status": "error",
+                "error": "resolve_stock failed",
+                "message": str(exc),
+            }
+        )
+        return 1
 
-    cached_dir = review_dir(stock_dir, today)
     reuse_cache = bool(cfg.get("cache", {}).get("reuse_existing_report", True))
-    if reuse_cache and not args.force and has_existing_report(cached_dir):
-        _print_reuse(code, name, today, cached_dir)
-        return 0
-
     fetchers = _import_fetchers()
     stock_trade = fetchers["stock_trade"].fetch(code, today)
     if stock_trade.get("status") == ERROR:

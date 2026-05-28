@@ -6,13 +6,19 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 
 from lib.status import ERROR, OK, UNAVAILABLE, layer_result
-from run_review import LAYERS, build_artifacts, main, parse_args
+from run_review import LAYERS, _default_output_root, build_artifacts, main, parse_args
 
 
 def test_parse_args_force():
     args = parse_args(["002594", "--force"])
     assert args.code_or_name == "002594"
     assert args.force is True
+
+
+def test_default_output_root_points_to_repo_output():
+    import run_review
+
+    assert _default_output_root() == Path(run_review.__file__).resolve().parents[3] / "output"
 
 
 def test_build_artifacts_sets_required_statuses():
@@ -54,11 +60,15 @@ def test_build_artifacts_includes_all_layers_with_error_fallback():
     assert {"layer": "tick_trade", "message": "tick_trade did not run"} in manifest["errors"]
 
 
-def test_main_reuses_existing_report(tmp_path, capsys):
+def test_main_reuses_existing_report(tmp_path, capsys, monkeypatch):
+    import run_review
+
     stock_dir = tmp_path / "比亚迪_002594" / "after-market-review" / "2026-05-28"
     stock_dir.mkdir(parents=True)
     report = stock_dir / "report.md"
     report.write_text("# cached\n", encoding="utf-8")
+    fetchers = _fake_fetchers()
+    monkeypatch.setattr(run_review, "_import_fetchers", lambda: fetchers)
 
     code = main(["002594", "--today", "2026-05-28", "--output-dir", str(tmp_path)])
 
@@ -66,6 +76,51 @@ def test_main_reuses_existing_report(tmp_path, capsys):
     out = json.loads(capsys.readouterr().out)
     assert out["status"] == "reuse"
     assert out["report_md"].endswith("report.md")
+    assert len(fetchers["stock_trade"].calls) == 1
+
+
+def test_main_reuses_cache_after_stock_trade_resolves_trade_date(tmp_path, capsys, monkeypatch):
+    import run_review
+
+    stock_dir = tmp_path / "比亚迪_002594" / "after-market-review" / "2026-05-28"
+    stock_dir.mkdir(parents=True)
+    (stock_dir / "report.md").write_text("# cached\n", encoding="utf-8")
+    fetchers = _fake_fetchers()
+    monkeypatch.setattr(run_review, "_import_fetchers", lambda: fetchers)
+
+    code = main(["002594", "--today", "2026-05-30", "--output-dir", str(tmp_path)])
+
+    assert code == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "reuse"
+    assert out["trade_date"] == "2026-05-28"
+    assert out["report_md"] == str(stock_dir / "report.md")
+    assert len(fetchers["stock_trade"].calls) == 1
+    assert fetchers["market"].calls == []
+    assert fetchers["sector"].calls == []
+    assert fetchers["tick_trade"].calls == []
+    assert fetchers["funds"].calls == []
+    assert fetchers["events"].calls == []
+    assert fetchers["sentiment"].calls == []
+
+
+def test_main_prints_stable_error_when_resolve_stock_fails(tmp_path, capsys, monkeypatch):
+    import run_review
+
+    def fail_resolve(query, output_root):
+        raise ValueError("unknown company")
+
+    monkeypatch.setattr(run_review, "resolve_stock", fail_resolve)
+
+    code = main(["未知公司", "--today", "2026-05-28", "--output-dir", str(tmp_path)])
+
+    assert code == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out == {
+        "status": "error",
+        "error": "resolve_stock failed",
+        "message": "unknown company",
+    }
 
 
 class FakeFetcher:
@@ -135,6 +190,9 @@ def test_data_ready_writes_artifacts_and_prints_paths(tmp_path, capsys, monkeypa
     assert Path(out["data_json"]).exists()
     assert Path(out["manifest_json"]).exists()
     data = json.loads(Path(out["data_json"]).read_text(encoding="utf-8"))
+    manifest = json.loads(Path(out["manifest_json"]).read_text(encoding="utf-8"))
     assert data["data_status"]["stock_trade"] == OK
     assert data["trade_date"] == "2026-05-28"
+    assert manifest["generated_files"] == ["data.json", "manifest.json"]
+    assert "report.md" not in manifest["generated_files"]
     assert fetchers["tick_trade"].calls[0][1] == {}
