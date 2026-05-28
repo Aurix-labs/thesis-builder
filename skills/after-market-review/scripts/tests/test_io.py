@@ -2,10 +2,12 @@ from pathlib import Path
 import json
 import sys
 
+import pytest
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 
-from lib.io import stock_output_dir, review_dir, write_json, has_existing_report
+from lib.io import stock_output_dir, review_dir, write_json, read_json, has_existing_report
 
 
 def test_review_dir_uses_after_market_review_segment(tmp_path):
@@ -20,6 +22,13 @@ def test_write_json_preserves_chinese(tmp_path):
     raw = p.read_text(encoding="utf-8")
     assert "比亚迪" in raw
     assert json.loads(raw)["name"] == "比亚迪"
+
+
+def test_read_json_requires_object_root(tmp_path):
+    p = tmp_path / "data.json"
+    p.write_text("[1, 2, 3]", encoding="utf-8")
+    with pytest.raises(ValueError, match=f"JSON root must be object: {p}"):
+        read_json(p)
 
 
 def test_has_existing_report(tmp_path):

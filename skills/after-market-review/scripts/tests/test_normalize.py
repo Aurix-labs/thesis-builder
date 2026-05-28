@@ -21,5 +21,7 @@ def test_pct_change_returns_percent():
 
 
 def test_bucket_time_groups_by_window_minutes():
+    assert bucket_time("09:30:00", 10) == "09:30-09:40"
     assert bucket_time("09:31:20", 10) == "09:30-09:40"
     assert bucket_time("14:56:03", 10) == "14:50-15:00"
+    assert bucket_time("15:00:00", 10) == "14:50-15:00"

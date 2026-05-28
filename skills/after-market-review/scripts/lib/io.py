@@ -19,7 +19,10 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    obj = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(obj, dict):
+        raise ValueError(f"JSON root must be object: {path}")
+    return obj
 
 
 def has_existing_report(path: Path) -> bool:

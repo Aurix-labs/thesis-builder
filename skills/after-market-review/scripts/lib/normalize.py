@@ -35,7 +35,10 @@ def pct_change(current: float | None, previous: float | None) -> float | None:
 
 
 def bucket_time(time_text: str, window_minutes: int) -> str:
-    t = dt.datetime.strptime(time_text[:8], "%H:%M:%S").time()
+    parsed = dt.datetime.strptime(time_text[:8], "%H:%M:%S")
+    if parsed.time() == dt.time(hour=15):
+        parsed -= dt.timedelta(microseconds=1)
+    t = parsed.time()
     start_minute = (t.minute // window_minutes) * window_minutes
     start = dt.time(hour=t.hour, minute=start_minute)
     end_dt = dt.datetime.combine(dt.date(2000, 1, 1), start) + dt.timedelta(minutes=window_minutes)
