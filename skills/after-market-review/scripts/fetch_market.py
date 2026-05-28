@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import datetime as dt
 from typing import Any
 
 from lib.normalize import pct_change, to_float
-from lib.status import OK, PARTIAL, layer_result
+from lib.status import OK, PARTIAL, UNAVAILABLE, layer_result
 
 
 def _records(df_or_rows: Any) -> list[dict]:
@@ -12,12 +13,15 @@ def _records(df_or_rows: Any) -> list[dict]:
     return list(df_or_rows or [])
 
 
+def _row_date(row: dict) -> str:
+    return str(row.get("date") or row.get("日期") or "")[:10]
+
+
 def _index_summary(rows: list[dict], code: str, name: str, trade_date: str) -> dict:
-    usable = [
-        row
-        for row in rows
-        if str(row.get("date") or row.get("日期"))[:10] <= trade_date
-    ]
+    usable = sorted(
+        [row for row in rows if _row_date(row) and _row_date(row) <= trade_date],
+        key=_row_date,
+    )
     if not usable:
         return {"code": code, "name": name, "status": "unavailable"}
 
@@ -28,7 +32,7 @@ def _index_summary(rows: list[dict], code: str, name: str, trade_date: str) -> d
     return {
         "code": code,
         "name": name,
-        "date": str(last.get("date") or last.get("日期"))[:10],
+        "date": _row_date(last),
         "close": close,
         "change_pct": pct_change(close, prev_close),
         "amount": to_float(last.get("amount") or last.get("成交额")),
@@ -42,6 +46,7 @@ def fetch(trade_date: str, cfg: dict, *, akshare_module=None) -> dict:
 
     indices: list[dict] = []
     errors: list[str] = []
+    start_date = (dt.date.fromisoformat(trade_date) - dt.timedelta(days=90)).strftime("%Y%m%d")
     for item in cfg.get("market_indices", []):
         code = item["code"]
         name = item["name"]
@@ -49,7 +54,7 @@ def fetch(trade_date: str, cfg: dict, *, akshare_module=None) -> dict:
             rows = _records(
                 akshare_module.stock_zh_index_daily_em(
                     symbol=code,
-                    start_date="19900101",
+                    start_date=start_date,
                     end_date=trade_date.replace("-", ""),
                 )
             )
@@ -57,5 +62,9 @@ def fetch(trade_date: str, cfg: dict, *, akshare_module=None) -> dict:
         except Exception as exc:
             errors.append(f"{code} failed: {exc}")
 
-    status = PARTIAL if errors else OK
+    usable_indices = [item for item in indices if item.get("status") != "unavailable"]
+    if cfg.get("market_indices") and not usable_indices:
+        status = UNAVAILABLE
+    else:
+        status = PARTIAL if errors else OK
     return layer_result(status, {"indices": indices}, errors)
