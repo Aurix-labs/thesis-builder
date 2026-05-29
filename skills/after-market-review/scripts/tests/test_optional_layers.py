@@ -103,7 +103,9 @@ class FakeEventsAkshare:
     def stock_news_em(self, *, symbol):
         assert symbol == "002594"
         return [
-            {"发布时间": "2026-05-28 15:01:00", "新闻标题": "当日新闻"},
+            {"发布时间": "2026-05-27 18:00:00", "新闻标题": "前日新闻"},
+            {"发布时间": "2026-05-28 14:59:00", "新闻标题": "盘中新闻"},
+            {"发布时间": "2026-05-28 15:01:00", "新闻标题": "盘后新闻"},
             {"发布时间": "2026-05-29 09:00:00", "新闻标题": "未来新闻"},
             {"发布时间": "", "新闻标题": "无日期新闻"},
             {"新闻标题": "缺日期新闻"},
@@ -126,8 +128,11 @@ def test_events_fetch_filters_news_by_trade_date_and_caps_catalysts():
 
     assert out["status"] == "ok"
     assert out["errors"] == []
-    assert [row["新闻标题"] for row in out["data"]["raw_news"]] == ["当日新闻"]
-    assert out["data"]["possible_catalyst"] == [{"发布时间": "2026-05-28 15:01:00", "新闻标题": "当日新闻"}]
+    assert [row["新闻标题"] for row in out["data"]["raw_news"]] == ["前日新闻", "盘中新闻"]
+    assert out["data"]["possible_catalyst"] == [
+        {"发布时间": "2026-05-27 18:00:00", "新闻标题": "前日新闻"},
+        {"发布时间": "2026-05-28 14:59:00", "新闻标题": "盘中新闻"},
+    ]
     assert out["data"]["verified_driver"] == []
     assert out["data"]["unsupported_rumor"] == []
 

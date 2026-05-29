@@ -31,11 +31,38 @@ def _date_part(value: str) -> str | None:
         return None
 
 
+def _published_at_or_before_close(value: str, trade_date: str) -> bool:
+    text = str(value or "").strip()
+    row_date = _date_part(text)
+    if row_date is None:
+        return False
+    if row_date < trade_date:
+        return True
+    if row_date > trade_date:
+        return False
+
+    time_text = text[10:].strip()
+    if not time_text:
+        return True
+    time_text = time_text.replace("T", " ").strip()
+    if time_text.startswith(" "):
+        time_text = time_text.strip()
+    candidate = time_text[:8]
+    if len(candidate) < 5:
+        return True
+    if len(candidate) == 5:
+        candidate = f"{candidate}:00"
+    try:
+        published_time = dt.time.fromisoformat(candidate)
+    except ValueError:
+        return True
+    return published_time <= dt.time(15, 0)
+
+
 def _news_on_or_before(rows: list[dict], trade_date: str) -> list[dict]:
     kept: list[dict] = []
     for row in rows:
-        row_date = _date_part(_published_at(row))
-        if row_date is not None and row_date <= trade_date:
+        if _published_at_or_before_close(_published_at(row), trade_date):
             kept.append(row)
     return kept
 

@@ -8,6 +8,10 @@ from lib.status import ERROR, OK, layer_result
 from lib.trade_calendar import latest_completed_trade_date
 
 
+CN_TZ = dt.timezone(dt.timedelta(hours=8))
+MARKET_READY_TIME = dt.time(15, 5)
+
+
 def _records(df_or_rows: Any) -> list[dict]:
     if hasattr(df_or_rows, "to_dict"):
         return df_or_rows.to_dict(orient="records")
@@ -29,9 +33,24 @@ def _pick(row: dict, *keys: str) -> Any:
     return None
 
 
-def _sorted_daily_rows(rows: list[dict], today: str) -> list[dict]:
+def _completed_cutoff_date(today: str, now: dt.datetime | None = None) -> str:
+    today_d = dt.date.fromisoformat(today)
+    if now is None:
+        now_cn = dt.datetime.now(CN_TZ)
+    elif now.tzinfo is None:
+        now_cn = now.replace(tzinfo=CN_TZ)
+    else:
+        now_cn = now.astimezone(CN_TZ)
+
+    if today_d == now_cn.date() and now_cn.time() < MARKET_READY_TIME:
+        return (today_d - dt.timedelta(days=1)).isoformat()
+    return today
+
+
+def _sorted_daily_rows(rows: list[dict], today: str, now: dt.datetime | None = None) -> list[dict]:
+    cutoff = _completed_cutoff_date(today, now)
     return sorted(
-        [row for row in rows if _row_date(row) and _row_date(row) <= today],
+        [row for row in rows if _row_date(row) and _row_date(row) <= cutoff],
         key=_row_date,
     )
 
@@ -78,7 +97,7 @@ def _intraday_pattern(minute_rows: list[dict]) -> str:
     return "横盘震荡"
 
 
-def fetch(code: str, today: str, *, akshare_module=None) -> dict:
+def fetch(code: str, today: str, *, akshare_module=None, now: dt.datetime | None = None) -> dict:
     if akshare_module is None:
         import akshare as akshare_module
 
@@ -92,13 +111,13 @@ def fetch(code: str, today: str, *, akshare_module=None) -> dict:
                 period="daily",
                 start_date=start,
                 end_date=end,
-                adjust="qfq",
+                adjust="",
             )
         )
         if not daily_rows:
             return layer_result(ERROR, {}, ["stock_zh_a_hist returned no rows"])
 
-        daily_rows = _sorted_daily_rows(daily_rows, today)
+        daily_rows = _sorted_daily_rows(daily_rows, today, now)
         if not daily_rows:
             return layer_result(ERROR, {}, ["stock_zh_a_hist returned no completed daily rows"])
 

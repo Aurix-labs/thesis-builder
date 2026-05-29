@@ -70,6 +70,52 @@ def test_resolve_stock_fetches_name_from_dataframe_for_first_code_call(tmp_path)
     assert stock_dir == tmp_path / "比亚迪_002594"
 
 
+class FakeAkshareCodeName:
+    @staticmethod
+    def stock_info_a_code_name():
+        return [
+            {"code": "002594", "name": "比亚迪"},
+            {"code": "600519", "name": "贵州茅台"},
+        ]
+
+
+def test_resolve_stock_fetches_code_for_first_name_call(tmp_path):
+    code, name, stock_dir = resolve_stock("比亚迪", tmp_path, akshare_module=FakeAkshareCodeName)
+    assert code == "002594"
+    assert name == "比亚迪"
+    assert stock_dir == tmp_path / "比亚迪_002594"
+
+
+class FakeAkshareAmbiguousName:
+    @staticmethod
+    def stock_info_a_code_name():
+        return [
+            {"code": "111111", "name": "测试股份"},
+            {"code": "222222", "name": "测试股份"},
+        ]
+
+
+def test_resolve_stock_ambiguous_name_from_akshare_raises(tmp_path):
+    with pytest.raises(ValueError) as excinfo:
+        resolve_stock("测试股份", tmp_path, akshare_module=FakeAkshareAmbiguousName)
+
+    message = str(excinfo.value)
+    assert "ambiguous" in message
+    assert "测试股份_111111" in message
+    assert "测试股份_222222" in message
+
+
+class FakeAkshareNoNameMatch:
+    @staticmethod
+    def stock_info_a_code_name():
+        return [{"code": "002594", "name": "比亚迪"}]
+
+
+def test_resolve_stock_unknown_name_without_output_dir_raises_clear_error(tmp_path):
+    with pytest.raises(ValueError, match="未能通过 stock_info_a_code_name 解析"):
+        resolve_stock("不存在公司", tmp_path, akshare_module=FakeAkshareNoNameMatch)
+
+
 def test_resolve_from_output_ambiguous_name_raises_with_candidates(tmp_path):
     (tmp_path / "比亚迪_002594").mkdir()
     (tmp_path / "比亚迪_099999").mkdir()

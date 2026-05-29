@@ -1,4 +1,5 @@
 from pathlib import Path
+import datetime as dt
 import sys
 
 HERE = Path(__file__).resolve().parent
@@ -12,7 +13,7 @@ class FakeStockAkshare:
     def stock_zh_a_hist(self, *, symbol, period, start_date, end_date, adjust):
         assert symbol == "002594"
         assert period == "daily"
-        assert adjust == "qfq"
+        assert adjust == ""
         assert start_date < end_date
         return [
             {
@@ -39,8 +40,8 @@ class FakeStockAkshare:
 
     def stock_zh_a_hist_min_em(self, *, symbol, start_date, end_date, period, adjust):
         assert symbol == "002594"
-        assert start_date == "2026-05-28 09:30:00"
-        assert end_date == "2026-05-28 15:00:00"
+        assert start_date in {"2026-05-27 09:30:00", "2026-05-28 09:30:00"}
+        assert end_date in {"2026-05-27 15:00:00", "2026-05-28 15:00:00"}
         assert period == "1"
         assert adjust == ""
         return [
@@ -153,6 +154,24 @@ def test_stock_trade_daily_summary_preserves_zero_fields():
     assert out["data"]["daily"]["volume"] == 0
     assert out["data"]["daily"]["amount"] == 0
     assert out["data"]["daily"]["turnover"] == 0
+
+
+def test_stock_trade_excludes_today_before_market_ready_time():
+    now = dt.datetime(2026, 5, 28, 14, 30, tzinfo=dt.timezone(dt.timedelta(hours=8)))
+    out = fetch_stock_trade("002594", "2026-05-28", akshare_module=FakeStockAkshare(), now=now)
+
+    assert out["status"] == "ok"
+    assert out["data"]["trade_date"] == "2026-05-27"
+    assert out["data"]["daily"]["date"] == "2026-05-27"
+
+
+def test_stock_trade_includes_today_after_market_ready_time():
+    now = dt.datetime(2026, 5, 28, 15, 5, tzinfo=dt.timezone(dt.timedelta(hours=8)))
+    out = fetch_stock_trade("002594", "2026-05-28", akshare_module=FakeStockAkshare(), now=now)
+
+    assert out["status"] == "ok"
+    assert out["data"]["trade_date"] == "2026-05-28"
+    assert out["data"]["daily"]["date"] == "2026-05-28"
 
 
 def test_intraday_pattern_detects_basic_shapes():

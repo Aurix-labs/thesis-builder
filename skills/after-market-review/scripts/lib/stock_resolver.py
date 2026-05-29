@@ -41,8 +41,38 @@ def _fetch_name(code: str, akshare_module: Any | None) -> str | None:
     return None
 
 
+def _lookup_code_by_name(name: str, akshare_module: Any | None) -> list[tuple[str, str]]:
+    if akshare_module is None:
+        try:
+            import akshare as akshare_module
+        except Exception:
+            return []
+    try:
+        rows = _records(akshare_module.stock_info_a_code_name())
+    except Exception:
+        return []
+
+    matches: list[tuple[str, str]] = []
+    for row in rows:
+        row_name = str(row.get("name") or row.get("名称") or "").strip()
+        code = str(row.get("code") or row.get("代码") or "").strip()
+        if row_name == name and code.isdigit():
+            code = code.zfill(6)
+            if len(code) == 6:
+                matches.append((code, row_name))
+    return sorted(set(matches))
+
+
 def _ambiguity_error(query: str, candidates: list[Path]) -> ValueError:
     candidate_names = ", ".join(sub.name for sub in candidates)
+    return ValueError(
+        f"ambiguous stock lookup for {query!r}: {candidate_names}; "
+        "please use a 6-digit code"
+    )
+
+
+def _name_lookup_ambiguity_error(query: str, candidates: list[tuple[str, str]]) -> ValueError:
+    candidate_names = ", ".join(f"{name}_{code}" for code, name in candidates)
     return ValueError(
         f"ambiguous stock lookup for {query!r}: {candidate_names}; "
         "please use a 6-digit code"
@@ -111,4 +141,17 @@ def resolve_stock(
                 name = fetched
                 stock_dir = output_root / f"{name}_{code}"
         return code, name, stock_dir
-    return resolve_from_output(code_or_name, output_root)
+
+    try:
+        return resolve_from_output(code_or_name, output_root)
+    except ValueError as output_error:
+        matches = _lookup_code_by_name(code_or_name, akshare_module)
+        if len(matches) > 1:
+            raise _name_lookup_ambiguity_error(code_or_name, matches) from output_error
+        if len(matches) == 1:
+            code, name = matches[0]
+            return code, name, output_root / f"{name}_{code}"
+        raise ValueError(
+            f"公司名 {code_or_name!r} 未在 output/ 下找到对应目录，"
+            "且未能通过 stock_info_a_code_name 解析；请使用 6 位代码"
+        ) from output_error
