@@ -1,0 +1,36 @@
+# market-review 模块配置（用户可直接编辑）
+
+modules:
+  index:
+    ttl_days: 1
+    aliases: [大盘, 指数, 环境诊断, 大盘环境]
+    description: 大盘环境诊断 - 指数多空、量能、涨跌家数、情绪温度计
+
+  sentiment:
+    ttl_days: 1
+    aliases: [情绪, 周期, 情绪周期, 涨停板]
+    description: 情绪周期定位 - 连板梯度、炸板率、溢价率、冰点/主升判定
+
+  mainline:
+    ttl_days: 1
+    aliases: [主线, 板块, 热点, 题材]
+    description: 主线与支线识别 - 板块资金、涨停归类、梯队结构
+
+  capital:
+    ttl_days: 1
+    aliases: [资金, 北向, 龙虎榜, 机构]
+    description: 资金行为监测 - 北向资金流向、龙虎榜信号
+
+  variables:
+    ttl_days: 1
+    aliases: [消息, 政策, 新闻, 变量, 事件]
+    description: 盘后变量汇总 - 政策/新闻/海外异动/影响评级
+
+  combatmap:
+    ttl_days: 1
+    aliases: [作战图, 仓位, 推演, 预案, 作战地图]
+    description: 明日作战地图 - 三种路径推演 + 仓位建议 + 风险提示
+
+defaults:
+  mode: review
+  force: false
