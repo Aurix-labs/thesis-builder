@@ -63,15 +63,20 @@ metadata:
 ```
 1. 跑 python scripts/run_review.py --date <today> [--force]
 2. 解析 stdout 输出（JSONL）：
-   - status=reuse  → 直接读 <module>/<ymd>/report.md 给用户
-   - status=data_ready → 读 data.json + references/modules/<m>.md
-                         写 <module>/<today>/report.md
-                         跑 python scripts/verify_facts.py --module <m> --ymd <today>
-3. 对每个 needs_report_md=true 的模块循环执行步骤 2
-4. Agent 读 6 份 report.md，合成 output/<today>/review.md
-5. 跑 python scripts/verify_consistency.py --ymd <today>
-6. 跑 python scripts/record_eval.py --ymd <today>
-7. 把 review.md 内容反馈给用户
+   - status=reuse  → 直接读已有 report.md，跳过步骤 3
+   - status=data_ready → 进入步骤 3
+3. **数据质量校验**（每个 data_ready 模块必做）：
+   跑 python scripts/validate_data.py --ymd <today> [--module <m>]
+   - FAIL → **Agent 停止该模块**，向用户报告数据质量问题，不写 report.md
+   - WARN → Agent 可写 report.md，但必须在报告中标注数据缺失项
+   - PASS → 继续写 report.md
+4. Agent 读 data.json + references/modules/<m>.md，写 report.md
+   跑 python scripts/verify_facts.py --module <m> --ymd <today>
+5. 对每个 needs_report_md=true 的模块循环执行步骤 3-4
+6. Agent 读 6 份 report.md，合成 output/<today>/review.md
+7. 跑 python scripts/verify_consistency.py --ymd <today>
+8. 跑 python scripts/record_eval.py --ymd <today>
+9. 把 review.md 内容反馈给用户
 ```
 
 ### 单模块（例：`/market-review --module sentiment`）
@@ -79,8 +84,8 @@ metadata:
 ```
 1. 跑 python scripts/run_review.py --date <today> --module sentiment [--force]
 2. 解析 stdout：
-   - status=reuse → 直接读 report.md
-   - status=data_ready → Agent 写 report.md → verify_facts
+   - status=reuse → 直接读已有 report.md
+   - status=data_ready → 跑 validate_data.py → 校验通过再写 report.md → verify_facts
 3. 把 report.md 内容反馈给用户
 ```
 
