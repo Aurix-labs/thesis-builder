@@ -1,0 +1,106 @@
+{
+  "skill_name": "market-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "default-review",
+      "prompt": "开始今日复盘",
+      "expected_output": "Skill triggers and runs the default review mode for the latest trading day. Each module either reuses TTL-fresh data.json or fetches new data. Agent writes per-module report.md, synthesizes review.md, runs verify_consistency and record_eval.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_review.py with --module review",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Each module directory under output/<ymd>/ contains data.json and report.md",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "review.md exists at output/<ymd>/review.md with '今日复盘摘要' and '明日作战地图' sections",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "eval.json exists at output/<ymd>/eval.json",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "verify_consistency.py exits 0 (all PASS)",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "single-module",
+      "prompt": "今天的情绪周期是什么阶段",
+      "expected_output": "Skill triggers and runs ONLY the `sentiment` module. Produces sentiment/<ymd>/report.md but does NOT produce review.md or run other modules.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_review.py with --module sentiment",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "sentiment/<ymd>/report.md exists",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Other module directories are not created in this run",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "force-refresh",
+      "prompt": "重新跑一下今天复盘",
+      "expected_output": "Skill recognizes '重新跑下' as --force, bypasses TTL for all modules, fetches fresh data and regenerates all reports.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Invokes scripts/run_review.py with --force",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "JSONL output contains 'data_ready' (not 'reuse') for all modules, proving --force took effect",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Fresh review.md is produced",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "no-stock-mention",
+      "prompt": "开始今日复盘",
+      "expected_output": "review.md must NOT mention any individual stock by name or code (R7). Should reference sectors and aggregate data only.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "review.md contains no 6-digit stock codes",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "review.md references sectors/indices (e.g., '人工智能板块') but not individual stocks",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    }
+  ]
+}
