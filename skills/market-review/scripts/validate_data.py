@@ -88,21 +88,29 @@ def _check_mainline(data: dict) -> dict:
 
 
 def _check_capital(data: dict) -> dict:
-    """资金监测：北向数据至少返回了记录（即使金额为 NaN 也算有数据），龙虎榜数据可能盘后才出。"""
+    """资金监测：fund_flow（盘后立即可用）必须存在，北向和龙虎榜可延迟。"""
+    ff = data.get("fund_flow", {})
+    has_fund_flow = ff.get("available", False)
     nb = data.get("northbound", {})
-    has_records = len(nb.get("recent_10d", [])) > 0
+    has_nb_records = len(nb.get("recent_10d", [])) > 0
     lhb = data.get("lhb_count", 0)
+    timing = data.get("_timing_notes", [])
+
     issues = []
-    if not has_records:
-        issues.append("北向资金数据无记录（akshare stock_hsgt_hist_em 可能失败）")
+    if not has_fund_flow:
+        issues.append("fund_flow 为空（stock_market_fund_flow 盘后应可用，请检查 akshare 版本）")
+    if not has_nb_records:
+        issues.append("北向资金数据无记录")
     if lhb == 0:
-        issues.append("龙虎榜数据为空（16:30 后重试可获取；当前时段可能正常）")  # WARN 级
+        issues.append("龙虎榜为空（约 16:30 后公布；当前时段正常）")
+    for note in timing:
+        issues.append(note)
 
     return {
         "module": "capital",
-        "status": "FAIL" if not has_records else ("WARN" if lhb == 0 else "PASS"),
+        "status": "FAIL" if not has_fund_flow else ("WARN" if issues else "PASS"),
         "issues": issues,
-        "summary": f"nb_records={len(nb.get('recent_10d', []))}, lhb={lhb}",
+        "summary": f"fund_flow={'ok' if has_fund_flow else 'MISSING'}, nb_records={len(nb.get('recent_10d', []))}, lhb={lhb}",
     }
 
 
