@@ -5,7 +5,7 @@ description: |
   覆盖：大盘环境、情绪周期、主线识别、资金监测、盘后变量、明日作战地图。
   仅供研究参考，不构成证券投资咨询业务，不构成投资建议。
 metadata:
-  argument-hint: [--force] [--module <模块名>]
+  argument-hint: "[--force] [--module <模块名>]"
 ---
 
 # market-review · A 股市场每日复盘系统
