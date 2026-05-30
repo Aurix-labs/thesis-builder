@@ -21,13 +21,19 @@ def fetch(output_root: str | Path, today: str, *, akshare_module=None) -> dict:
     today_d = dt.date.fromisoformat(today)
 
     # 概念板块资金流向
+    # 盘后东方财富 API 可能拒绝"今日"维度的请求，依次尝试多个参数组合
     sector_flow = []
-    try:
-        df = ak.stock_sector_fund_flow_rank(indicator="今日", sector_type="概念")
-        if df is not None and not df.empty:
-            sector_flow = df.to_dict(orient="records") if hasattr(df, "to_dict") else list(df)
-    except Exception:
-        pass
+    for indicator in ["今日", "3日", "5日"]:
+        for sector_type in ["概念资金流", "行业资金流", "地域资金流"]:
+            try:
+                df = ak.stock_sector_fund_flow_rank(indicator=indicator, sector_type=sector_type)
+                if df is not None and not df.empty:
+                    sector_flow = df.to_dict(orient="records") if hasattr(df, "to_dict") else list(df)
+                    break
+            except Exception:
+                continue
+        if sector_flow:
+            break
 
     # 涨停股按板块归类（需结合 sentiment 数据——这里先独立拉取涨停再归类）
     limit_up_by_sector: dict[str, int] = {}

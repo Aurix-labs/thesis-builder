@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -22,8 +23,21 @@ class _MarketEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
+def _sanitize(obj: Any) -> Any:
+    """递归替换 NaN/Infinity 为 None，确保产出合法 JSON。"""
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(v) for v in obj]
+    return obj
+
+
 def _to_json(data: dict) -> str:
-    return json.dumps(data, ensure_ascii=False, indent=2, cls=_MarketEncoder)
+    return json.dumps(_sanitize(data), ensure_ascii=False, indent=2, cls=_MarketEncoder)
 
 
 def write_module_data(output_root: Path, module: str, ymd: str, data: dict) -> Path:

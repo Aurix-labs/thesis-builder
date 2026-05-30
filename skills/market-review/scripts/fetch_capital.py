@@ -30,11 +30,20 @@ def _fetch_northbound(ak, today_d: dt.date) -> dict:
             result["sz_recent_10d"] = sz_records[-10:]
 
         # 计算当日净买卖（最近一条记录）
+        # 字段名：东方财富 A 股为 "当日成交净买额"，港股通可能不同
         sh_last = result.get("recent_10d", [])
         sz_last = result.get("sz_recent_10d", [])
-        sh_net = float(sh_last[-1].get("净买额", 0) or 0) if sh_last else 0
-        sz_net = float(sz_last[-1].get("净买额", 0) or 0) if sz_last else 0
-        result["today_net"] = round(sh_net + sz_net, 2)
+        def _get_net(rec: dict) -> float:
+            v = rec.get("当日成交净买额") or rec.get("净买额") or 0
+            try:
+                f = float(v)
+                return 0.0 if (f != f) else f  # NaN → 0
+            except (ValueError, TypeError):
+                return 0.0
+        sh_net = _get_net(sh_last[-1]) if sh_last else 0
+        sz_net = _get_net(sz_last[-1]) if sz_last else 0
+        if sh_net or sz_net:
+            result["today_net"] = round(sh_net + sz_net, 2)
     except Exception:
         pass
     return result

@@ -19,11 +19,16 @@ INDEX_CODES = {
 }
 
 
+def _get_close(r: dict) -> float:
+    """akshare 返回的字段名可能是英文 'close' 或中文 '收盘'。"""
+    return float(r.get("close", 0) or r.get("收盘", 0) or 0)
+
+
 def _classify_trend(kline_records: list[dict]) -> str:
-    """基于最近 20 条日 K 判断 MA5/MA20 方向"""
+    """基于最近 20 条日 K 判断 MA5/MA20 方向。"""
     if len(kline_records) < 20:
         return "数据不足"
-    closes = [r.get("收盘", 0) or 0 for r in kline_records[-20:]]
+    closes = [_get_close(r) for r in kline_records[-20:]]
     if not closes or closes[-1] == 0:
         return "数据不足"
     ma5 = sum(closes[-5:]) / min(5, len(closes[-5:]))
@@ -99,12 +104,14 @@ def fetch(output_root: str | Path, today: str, *, akshare_module=None) -> dict:
         pass
 
     # 计算全市场总成交额
+    # 注意：stock_zh_index_daily 对指数来说 'volume' 字段是成交额（元）
     total_amount = 0.0
     for code_data in index_data.values():
         kline = code_data.get("kline", [])
         if kline:
             last = kline[-1]
-            total_amount += float(last.get("成交额", 0) or 0)
+            amount = float(last.get("volume", 0) or last.get("成交额", 0) or 0)
+            total_amount += amount
 
     data = {
         "module": MODULE_NAME,
