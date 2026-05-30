@@ -1,7 +1,7 @@
 # thesis-builder
 
 一个 Claude / Cursor / Codex / OpenCode 等 AI agent 通用的 **投资研究 skill 集合**。
-当前包含 `stock-analysis`（A 股个股深度研究系统）和 `after-market-review`（A 股单股盘后复盘系统）。
+当前包含 `stock-analysis`（A 股个股深度研究系统）和 `market-review`（A 股市场每日复盘系统）。
 
 > 本工具仅供研究参考，不构成证券投资咨询业务，不构成投资建议。投资有风险，决策需谨慎。
 
@@ -14,15 +14,15 @@
 ```bash
 # 全局安装（投放到所有支持的 agent）
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis -g
-npx skills add Aurix-labs/thesis-builder --skill after-market-review -g
+npx skills add Aurix-labs/thesis-builder --skill market-review -g
 
 # 仅本项目
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis
-npx skills add Aurix-labs/thesis-builder --skill after-market-review
+npx skills add Aurix-labs/thesis-builder --skill market-review
 
 # 安装到指定 agent
 npx skills add Aurix-labs/thesis-builder --skill stock-analysis -a claude-code
-npx skills add Aurix-labs/thesis-builder --skill stock-analysis -a cursor
+npx skills add Aurix-labs/thesis-builder --skill market-review -a claude-code
 ```
 
 CLI 自动按 agent 投放到正确位置：Claude Code → `~/.claude/skills/stock-analysis/`、Cursor → `~/.cursor/skills/stock-analysis/`、等等。
@@ -32,16 +32,64 @@ CLI 自动按 agent 投放到正确位置：Claude Code → `~/.claude/skills/st
 ```bash
 git clone https://github.com/Aurix-labs/thesis-builder
 cp -r thesis-builder/skills/stock-analysis ~/.claude/skills/
-cp -r thesis-builder/skills/after-market-review ~/.claude/skills/
+cp -r thesis-builder/skills/market-review ~/.claude/skills/
 ```
 
 ---
 
 ## 当前 Skills
 
-### after-market-review · 盘后复盘
+### market-review · 市场每日复盘
 
-A 股单股盘后复盘系统，独立于 `stock-analysis`。默认对最近一个已收盘交易日做复盘，读取市场、板块、个股分时、分笔大单、资金、新闻公告与情绪线索，输出 Markdown 报告和结构化 `data.json`。第一版只给次日观察点，不给交易计划。
+A 股市场每日复盘系统，定位为"宏观观察员"。回答三个问题：明天适不适合交易？主战场在哪？该用几成力？
+
+**6 个模块：**
+
+| 模块 | 主名 | 内容 | TTL |
+|---|---|---|---|
+| 大盘环境诊断 | `index` | 5 大指数多空状态、量能台阶、涨跌家数比、情绪温度计 | 1 天 |
+| 情绪周期定位 | `sentiment` | 涨停板统计、连板梯度、炸板率、冰点/主升/退潮判定 | 1 天 |
+| 主线与支线识别 | `mainline` | 板块资金排名、涨停归类、主线加强/分歧/转弱判定 | 1 天 |
+| 资金行为监测 | `capital` | 北向资金流向、龙虎榜机构/游资信号 | 1 天 |
+| 盘后变量汇总 | `variables` | 海外市场收盘、政策新闻影响评级 | 1 天 |
+| 明日作战地图 | `combatmap` | 三种场景推演 + 仓位建议 + 风险提示 | 1 天 |
+
+**使用：**
+
+```bash
+# 完整复盘
+开始今日复盘
+今天市场怎么样
+
+# 单模块调用
+今天的情绪周期是什么阶段
+
+# 强制刷新
+重新跑一下今天复盘
+```
+
+**输出：**
+
+```
+output/<YYYY-MM-DD>/
+├── index/{data.json, report.md}
+├── sentiment/{data.json, report.md}
+├── mainline/{data.json, report.md}
+├── capital/{data.json, report.md}
+├── variables/{data.json, report.md}
+├── combatmap/{data.json, market_data.json, report.md}
+├── review.md
+└── eval.json
+```
+
+**核心特性：**
+
+- **模块化解耦** —— 6 个模块各有独立 fetch 脚本、data.json、report.md，模块间不引用分析结论
+- **TTL=1 天** —— 当日数据当日复用，`--force` 强制刷新
+- **脚本拉数据，Agent 写报告** —— akshare 优先，Agent 不碰数据拉取
+- **内置 eval** —— 每日自动提取关键判断到 eval.json，供次日验证
+
+**详见：** [skills/market-review/SKILL.md](skills/market-review/SKILL.md)、[skills/market-review/config.yaml](skills/market-review/config.yaml)
 
 ### stock-analysis · v4.0（模块化）
 
@@ -164,7 +212,8 @@ thesis-builder/
 │       └── plans/        # 实施计划
 ├── mockups/              # 设计稿
 └── skills/
-    └── stock-analysis/   # v4.0
+    ├── stock-analysis/   # v4.0
+    └── market-review/    # v1.0
 ```
 
 ---
