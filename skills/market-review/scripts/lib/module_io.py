@@ -1,16 +1,36 @@
 """模块数据读写 + latest 软链管理。"""
 from __future__ import annotations
 
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
+
+
+class _MarketEncoder(json.JSONEncoder):
+    """处理 akshare 返回的 date/datetime/Timestamp 等不可序列化类型。"""
+
+    def default(self, obj):
+        if isinstance(obj, (dt.datetime, dt.date)):
+            return obj.isoformat()
+        # pandas Timestamp
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
+        # numpy types
+        if hasattr(obj, "item"):
+            return obj.item()
+        return super().default(obj)
+
+
+def _to_json(data: dict) -> str:
+    return json.dumps(data, ensure_ascii=False, indent=2, cls=_MarketEncoder)
 
 
 def write_module_data(output_root: Path, module: str, ymd: str, data: dict) -> Path:
     ymd_dir = output_root / ymd / module
     ymd_dir.mkdir(parents=True, exist_ok=True)
     (ymd_dir / "data.json").write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
+        _to_json(data),
         encoding="utf-8",
     )
     update_latest_symlink(output_root / ymd, module)

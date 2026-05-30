@@ -44,17 +44,23 @@ def _register_fetchers():
 
 def expand_modules(user_modules: list[str], config: dict) -> list[str]:
     """归一化别名 + 展开 review → 全部 6 个模块。返回有序清单。"""
-    amap = build_alias_map(config)
-    canonical = [resolve_module_name(m, amap) for m in user_modules]
-    out: list[str] = []
-    for m in canonical:
-        if m == "review":
-            for rm in REVIEW_MODULES:
-                if rm not in out:
-                    out.append(rm)
-        else:
-            if m not in out:
-                out.append(m)
+    # "review" 是元命令（展开为全部模块），不是 config.yaml 中的模块别名
+    # 必须在 alias 解析前剥离，否则 resolve_module_name 会报"未知模块名"
+    is_review = any(m.lower() == "review" for m in user_modules)
+    non_review = [m for m in user_modules if m.lower() != "review"]
+
+    if is_review:
+        out = list(REVIEW_MODULES)
+    else:
+        out: list[str] = []
+
+    if non_review:
+        amap = build_alias_map(config)
+        for m in non_review:
+            resolved = resolve_module_name(m, amap)
+            if resolved not in out:
+                out.append(resolved)
+
     # 确保 combatmap 在最后（依赖前五模块）
     if "combatmap" in out:
         out.remove("combatmap")

@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from lib.module_io import write_module_data, read_module_data
+from lib.module_io import write_module_data, read_module_data, _MarketEncoder
 
 MODULE_NAME = "combatmap"
 PREREQ_MODULES = ["index", "sentiment", "mainline", "capital", "variables"]
@@ -112,7 +112,7 @@ def fetch(output_root: str | Path, today: str, *, akshare_module=None) -> dict:
     write_module_data(output_root, MODULE_NAME, today, market_data)
     market_data_path = output_root / today / MODULE_NAME / "market_data.json"
     market_data_path.write_text(
-        json.dumps(market_data, ensure_ascii=False, indent=2),
+        json.dumps(market_data, ensure_ascii=False, indent=2, cls=_MarketEncoder),
         encoding="utf-8",
     )
     return market_data
